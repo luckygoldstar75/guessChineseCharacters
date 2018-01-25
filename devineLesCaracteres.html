@@ -1,0 +1,51 @@
+<!doctype html>
+
+<html>
+<head>
+   <meta charset="UTF-8">
+   <link rel="stylesheet" href="styles.css">
+   <script src="chineseCaracters.json" ></script>
+</head>
+
+<div id="currentResult" align="center">Réussis: 0 / Total: 0</div>
+
+<div id="caractereADeviner" align="center" class="caracterTobeGuessed"></div>
+
+<div id="listePinYin" class="border" style="text-align:center">
+
+<div id="actions" align="center">
+<button type="button" class="actionbutton" id="Valider" autofocus>Valider↵</button>
+<button type="button" class="actionbutton" id="Suivant" autofocus>Suivant↓</button>
+</div>
+
+<input type="button" onclick="addChar('ā')" value="ā" class="pinyinbutton">
+<input type="button" onclick="addChar('á')" value="á" class="pinyinbutton">
+<input type="button" onclick="addChar('ǎ')" value="ǎ" class="pinyinbutton">
+<input type="button" onclick="addChar('à')" value="à" class="pinyinbutton">
+<input type="button" onclick="addChar('ē')" value="ē" class="pinyinbutton">
+<input type="button" onclick="addChar('é')" value="é" class="pinyinbutton">
+<input type="button" onclick="addChar('ě')" value="ě" class="pinyinbutton">
+<input type="button" onclick="addChar('è')" value="è" class="pinyinbutton">
+<input type="button" onclick="addChar('ō')" value="ō" class="pinyinbutton">
+<input type="button" onclick="addChar('ó')" value="ó" class="pinyinbutton">
+<input type="button" onclick="addChar('ǒ')" value="ǒ" class="pinyinbutton">
+<input type="button" onclick="addChar('ò')" value="ò" class="pinyinbutton">
+<input type="button" onclick="addChar('ī')" value="ī" class="pinyinbutton">
+<input type="button" onclick="addChar('í')" value="í" class="pinyinbutton">
+<input type="button" onclick="addChar('ǐ')" value="ǐ" class="pinyinbutton">
+<input type="button" onclick="addChar('ì')" value="ì" class="pinyinbutton">
+<input type="button" onclick="addChar('ū')" value="ū" class="pinyinbutton">
+<input type="button" onclick="addChar('ú')" value="ú" class="pinyinbutton">
+<input type="button" onclick="addChar('ǔ')" value="ǔ" class="pinyinbutton">
+<input type="button" onclick="addChar('ù')" value="ù" class="pinyinbutton">
+<input type="button" onclick="addChar('ǖ')" value="ǖ" class="pinyinbutton">
+<input type="button" onclick="addChar('ǘ')" value="ǘ" class="pinyinbutton">
+<input type="button" onclick="addChar('ǚ')" value="ǚ" class="pinyinbutton">
+<input type="button" onclick="addChar('ǜ')" value="ǜ" class="pinyinbutton">
+
+<textarea name="saisie Pinyin" id="saisiePinyin" cols="50" rows="4" class="pinyintextarea" spellcheck="false"></textarea><br>
+</div>
+
+<script src="main.js" ></script>
+
+</html>
