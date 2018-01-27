@@ -6,12 +6,7 @@ const _myConfig = {
 	authAlgo : 'HS512',
 	authExpiracyInHours : '1h',
 	tableOfCurrentConnections : []
- },
-
- "users" : { 
-	root : "r00t$", 
-	simple : "$simpaul"
- }
+	}
 };
 
 export default _myConfig ;

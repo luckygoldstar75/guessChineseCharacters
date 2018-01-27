@@ -10,7 +10,7 @@ var _myAuth = require('./authenticationPlugin');
 console.log("auth plugin ", _myAuth );
 
 
-server.register( require( './authenticationPlugin' ), ( err ) => {
+server.register( [require('inert'), require( './authenticationPlugin' )], ( err ) => {
 
     if( !err ) {
         console.log( 'done' );
