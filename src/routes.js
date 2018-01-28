@@ -138,6 +138,7 @@
                         return reply({    
                           'token' : token,
                           'scope': escapedInputEmail
+                          //add expiration?
                         });
                     } else if (data !== undefined && data.Items.length>=1) {
                       nbGood = data.Items[0].nbGood.N;
@@ -191,8 +192,6 @@
                     strategy: 'token',
                 }},
         handler: ( request, reply ) => { try {
-                    if (request.auth.credentials.token in _myConfig.server.tableOfCurrentConnections) {
-                        console.log("get stats for user with valid token: value : " + request.auth.credentials.token + " and username " +_myConfig.server.tableOfCurrentConnections[token].user);
                         var docClient = new AWS.DynamoDB.DocumentClient();
                         var table = "sessions";
 
@@ -215,17 +214,6 @@
                         reply(JSON.stringify(_reply));
                       }
                     });
-                    }
-                    else  {
-                        if (request.auth.credentials.token === undefined) {
-                        console.log("user without token: value : " + request.auth.credentials.token);
-                        }
-                        else  {
-                        console.log("user with INVALID token: value : " + request.auth.credentials.token);
-                        }
-                        
-                        reply('invalid token'.code(401));                
-                    }
                 } catch (ex)  {
             console.error("", ex.message);
                     reply( 'server-side error' ).code(500);		
@@ -241,28 +229,19 @@
                 }
             },
             handler: ( request, reply ) => { try {
-                 if (request.auth.credentials.token in _myConfig.server.tableOfCurrentConnections) {
-                        console.log("new call to: " + method + " " + path  + " for user with valid token: value : " + request.auth.credentials.token + " and username " +_myConfig.server.tableOfCurrentConnections[token].user);
-                         var indexHasard=Math.floor((Math.random() * caracteres.length));
+                       console.log("new call to: " + request.method + " " + request.path  +
+                                " with params " + ((request.params === null)? undefined: JSON.stringify(request.params)) +
+                                " and payload " + ((request.payload === null)? undefined: JSON.stringify(request.payload)) +
+                                " and scope credentials: " + request.auth.credentials.scope);
+                         var indexHasard=Math.floor((Math.random() * CHINESE_CHARACTERS_JSON.table.length));
                          var myCar = CHINESE_CHARACTERS_JSON.table[indexHasard].caracter;
                          var myUniqueGuessId=_myConfig.guid();
-                         var guessItem = { myUniqueGuessId : {"character" : myCar,
-                                                  "timestamp" : Date.now()}};
-                         tableOfCurrentGuess.push(guessItem);
+                         console.log(myUniqueGuessId);
+                         var guessItem = { "id": myUniqueGuessId ,"character" : myCar,
+                                                  "timestamp" : Date.now()};
+                         _myConfig.server.tableOfCurrentGuess[myUniqueGuessId]=guessItem;
                          var stringGuessItem = JSON.stringify(guessItem);
                         return reply(stringGuessItem).code(200);
-                    }
-                    else  {
-                        if (request.auth.credentials.token === undefined) { //todo : request.IPsource
-                        console.log("new Test for user without token: value : " + request.auth.credentials.token);
-                        // what do we do here ? would be nice to allow prospect play and invite to sign up
-                        }
-                        else  {
-                        console.log("new attempt for user with INVALID token: value : " + request.auth.credentials.token); //todo : log request.IPsource
-                        }
-                        
-                        reply('invalid token').code(401);                
-                    }
                 } catch (ex)  {
             console.error("", ex.message);
                     reply( 'server-side error' ).code(500);		
@@ -279,20 +258,11 @@
                 }
             },
             handler: ( request, reply ) => { try {
-                    if (request.auth.credentials.token in _myConfig.server.tableOfCurrentConnections) {
-                        console.log("new Test for user with valid token: value : " + request.auth.credentials.token + " and username " +_myConfig.server.tableOfCurrentConnections[token].user);
-                        return reply('valid token'.code(200));
-                    }
-                    else  {
-                        if (request.auth.credentials.token === undefined) {
-                        console.log("new Test for user without token: value : " + request.auth.credentials.token);
-                        }
-                        else  {
-                        console.log("new Test for user with INVALID token: value : " + request.auth.credentials.token);
-                        }
-                        
-                        return reply('invalid token').code(401);                
-                    }
+                    console.log("new call to: " + request.method + " " + request.path  +
+                                " with params " + ((request.params === null)? undefined: JSON.stringify(request.params)) +
+                                " and payload " + ((request.payload === null)? undefined: JSON.stringify(request.payload)) +
+                                " and scope credentials: " + request.auth.credentials.scope);
+                        return reply('valid token').code(200);
                 } catch (ex)  {
             console.error("", ex.message);
                     return reply( 'server-side error' ).code(500);		
