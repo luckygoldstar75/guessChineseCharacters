@@ -58,7 +58,7 @@
                 const { email, password } = request.payload;
             console.log("password NEEDS to be checked: " + email +"/" +password);	 //todo : request.IPsource
             
-            var docClient = new AWS.DynamoDB.DocumentClient();
+            var dbPlayers = new AWS.DynamoDB();
             var escapedInputEmail = (validator.escape(email)).toLowerCase();
             
             if(!validator.isEmail(escapedInputEmail)) {
@@ -69,35 +69,41 @@
             //EMAIL VALIDATED: legt's check mdp in db
             var params = {
                 TableName: "my_players",
-                Key:{
-                "email": escapedInputEmail
-                }
+                Key : {'email' : {S: escapedInputEmail}}
             };
             
             console.log("before invocation of AWS.DynamoDB");
-            docClient.get(params, function(err, data) {
+            dbPlayers.getItem(params, function(err, data) {
               if (err) {  
                 return reply({
                         error: true,
-                        errMessage: err + ' Unable to read item'
+                        errMessage: err + ': Unable to read item'
                     });
               } else {
+                
+                if (data === undefined || data.Item === undefined) {
+                    return reply({  
+                        error: true,
+                        errMessage: "LOGIN/PASSWORD NOT FOUND"
+                    });
+                }
+                
                 console.log("DATA: " + data );
                 var _reply= JSON.stringify(data.Item);
                 console.log("DATA: " + data + " REPLY: " +_reply);
-                var mdpsale= data.Item["motDePasseSalé"];
-                var sel= data.Item.sel;
+                var mdpsale= data.Item["motDePasseSalé"].S;
+                var sel= data.Item.sel.S;
                 var saltedPasswordHash=SHA256(sel + password).toString();
                 console.log("mdpsale: " + mdpsale + " sel: " +sel +  " saltedPasswordHash: " + saltedPasswordHash);
                 console.log(typeof(mdpsale) + " " +  typeof(saltedPasswordHash));
                 
-                if(saltedPasswordHash !== mdpsale) {
+                if(saltedPasswordHash !== mdpsale.toString()) {
                   return reply({  
                         error: true,
                         errMessage: "LOGIN/PASSWORD NOT FOUND"
                     });
                 }
-                else { // account and input password DO match
+                else { // account and input password DO match ==> Register new session in db and memory
                   const token = jwt.sign({
                             escapedInputEmail,
                             scope: escapedInputEmail
@@ -107,33 +113,65 @@
                         } );
                   
                 console.log("good password");
+                
+                //store New session in memory
+                var expiryTimeForNewToken = Date.now() + _myConfig.server.authExpiracyInHours*3600*1000;
+                      _myConfig.server.tableOfCurrentConnections.push({token : {user: escapedInputEmail, expiryTime : expiryTimeForNewToken}});
+                
+                
+                
+                // Get last Session (OPTIONAL)
                 var nbGood =0, nbFalse=0;
-                // Register new session in db and memory
                var params = {
                           TableName: 'sessions',
-                          ExpressionAttributeValues : {
-                          ':token' : {S : token  }     
-                          },
-                          KeyConditionExpression: 'token = :token',
+                          "ExpressionAttributeValues": {":escapedEmail" : {"S" : escapedInputEmail} },
+                          "KeyConditionExpression": "email = :escapedEmail",
                           "Limit": 1,
                           ScanIndexForward: false
                         };
-              docClient.get(params, function(err, data) { //WARN : TODO : GET ONLY the MAX timestamp session for user
+
+              dbPlayers.query(params, function(err, data) { //WARN : TODO : GET ONLY the MAX timestamp session for user
                   if (err) {
-                        reply(err + ' Unable to read last session item');
-                    } else {
-                      nbGood, nbFalse=data;
-                    }
-              });
-              
-              var expiryTimeForNewToken = Date.now() + _myConfig.server.authExpiracyInHours*3600*1000;
-              _myConfig.server.tableOfCurrentConnections.push({token : {user: escapedInputEmail, expiryTime : expiryTimeForNewToken}});
-              return reply({    
+                        console.log(err + ' Unable to read last session item');
+                        
+                        return reply({    
+                          'token' : token,
+                          'scope': escapedInputEmail
+                        });
+                    } else if (data !== undefined && data.Items.length>=1) {
+                      nbGood = data.Items[0].nbGood.N;
+                      nbFalse = data.Items[0].nbFalse.N;
+
+                       //sessions
+                       var paramsStoreNewSession = {
+                          TableName: 'sessions',
+                          "Item" : {"email" : {"S" : escapedInputEmail},
+                            "token" : {"S" : token},
+                            "nbGood" : {"N" : nbGood},
+                            "nbFalse" : {"N" : nbFalse},
+                            "timestamp" : { "N" : (Date.now()).toString()}
+                          }
+                        };
+                       
+                       dbPlayers.putItem(paramsStoreNewSession, function(err, data) { //WARN : TODO : GET ONLY the MAX timestamp session for user
+                        if (err) {
+                          console.log(err + ' Unable to put new session item');                          
+                        } else {
+                          console.log('put new session with token:' + token +  " :Success"); 
+                        }
+                                                
+                        });
+                        
+                      return reply({    
                           'token' : token,
                           'scope': escapedInputEmail,
                           'nbGood': nbGood, 
                           'nbFalse' : nbFalse
                         });
+                    }
+              });
+              
+
                 }
                 }   
                }       
