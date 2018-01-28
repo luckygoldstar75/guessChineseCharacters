@@ -1,4 +1,6 @@
-var caracteres = [
+'use strict';
+const CHINESE_CHARACTERS_JSON = {
+ "table"  : [
 {"pinyin":"ān" , "caracter": "安", "translation" : "paix", "hint" : "femme sous toît"},
 {"pinyin":"bàba" , "caracter": "爸爸", "translation" : "papa", "hint" : ""},
 {"pinyin":"māma" , "caracter": "媽媽", "translation" : "mère|maman", "hint" : "genre féminin + puis le ma phonétique"},
@@ -59,5 +61,6 @@ var caracteres = [
 {"pinyin":"hái", "caracter" : "還", "translation" :  "ou bien encore", "hint" : ""},
 {"pinyin":"lǎoshī, wǒ zài zhèlǐ" , "caracter" : "老師, 我 再 這里", "translation" :  "Professeur, je suis ici", "hint" : ""},
 {"pinyin":"nǐ shì Xiǎomíng ma ?" , "caracter" : "你 是 小明 嗎?", "translation" :  "Tu es Xiaming n'est pas", "hint" : ""}
-]
+]}
 ;
+export default CHINESE_CHARACTERS_JSON ;

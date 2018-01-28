@@ -3,7 +3,8 @@
     import AWS from 'aws-sdk';
     import validator from 'validator';
     import _log from './loggingTools';
-    import inert from 'inert'
+    import inert from 'inert';
+    import CHINESE_CHARACTERS_JSON from './chineseCaracters.js';
     var SHA256 = require("crypto-js/sha256");
     
     AWS.config.update({
@@ -231,7 +232,44 @@
                 }            
         }
     },
+    {   
+            path: '/guessCharacter', //TODO NOT BE PUT IN PRODUCTION
+            method: 'GET',
+            config: {
+                auth: {
+                    strategy: 'token',
+                }
+            },
+            handler: ( request, reply ) => { try {
+                 if (request.auth.credentials.token in _myConfig.server.tableOfCurrentConnections) {
+                        console.log("new call to: " + method + " " + path  + " for user with valid token: value : " + request.auth.credentials.token + " and username " +_myConfig.server.tableOfCurrentConnections[token].user);
+                         var indexHasard=Math.floor((Math.random() * caracteres.length));
+                         var myCar = CHINESE_CHARACTERS_JSON.table[indexHasard].caracter;
+                         var myUniqueGuessId=_myConfig.guid();
+                         var guessItem = { myUniqueGuessId : {"character" : myCar,
+                                                  "timestamp" : Date.now()}};
+                         tableOfCurrentGuess.push(guessItem);
+                         var stringGuessItem = JSON.stringify(guessItem);
+                        return reply(stringGuessItem).code(200);
+                    }
+                    else  {
+                        if (request.auth.credentials.token === undefined) { //todo : request.IPsource
+                        console.log("new Test for user without token: value : " + request.auth.credentials.token);
+                        // what do we do here ? would be nice to allow prospect play and invite to sign up
+                        }
+                        else  {
+                        console.log("new attempt for user with INVALID token: value : " + request.auth.credentials.token); //todo : log request.IPsource
+                        }
+                        
+                        reply('invalid token').code(401);                
+                    }
+                } catch (ex)  {
+            console.error("", ex.message);
+                    reply( 'server-side error' ).code(500);		
+                }
+        }       
         
+    },       
     {   
             path: '/privacyCheckTestService', //TODO NOT BE PUT IN PRODUCTION
             method: 'GET',
@@ -243,7 +281,7 @@
             handler: ( request, reply ) => { try {
                     if (request.auth.credentials.token in _myConfig.server.tableOfCurrentConnections) {
                         console.log("new Test for user with valid token: value : " + request.auth.credentials.token + " and username " +_myConfig.server.tableOfCurrentConnections[token].user);
-                        reply('valid token'.code(200));
+                        return reply('valid token'.code(200));
                     }
                     else  {
                         if (request.auth.credentials.token === undefined) {
@@ -253,11 +291,11 @@
                         console.log("new Test for user with INVALID token: value : " + request.auth.credentials.token);
                         }
                         
-                        reply('invalid token'.code(401));                
+                        return reply('invalid token').code(401);                
                     }
                 } catch (ex)  {
             console.error("", ex.message);
-                    reply( 'server-side error' ).code(500);		
+                    return reply( 'server-side error' ).code(500);		
                 }
         }       
         
