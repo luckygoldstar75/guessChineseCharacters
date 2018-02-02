@@ -5,6 +5,7 @@
     import _log from './loggingTools';
     import inert from 'inert';
     import CHINESE_CHARACTERS_JSON from './chineseCaracters.js';
+    import SESSIONS from './CRUD-sessions.js';
     var SHA256 = require("crypto-js/sha256");
     
     AWS.config.update({
@@ -111,20 +112,18 @@
                         }, _myConfig.server.privateKeyAuth, {
                             algorithm: _myConfig.server.authAlgo,
                             expiresIn: _myConfig.server.authExpiracyInHours
-                        } );
+                        });
                   
                 console.log("good password");
                 
                 //store New session in memory
                 var expiryTimeForNewToken = Date.now() + _myConfig.server.authExpiracyInHours*3600*1000;
                       _myConfig.server.tableOfCurrentConnections.push({token : {user: escapedInputEmail, expiryTime : expiryTimeForNewToken}});
-                
-                
-                
+                               
                 // Get last Session (OPTIONAL)
                 var nbGood =0, nbFalse=0;
-               var params = {
-                          TableName: 'sessions',
+                var params = {
+                          TableName: 'my_sessions',
                           "ExpressionAttributeValues": {":escapedEmail" : {"S" : escapedInputEmail} },
                           "KeyConditionExpression": "email = :escapedEmail",
                           "Limit": 1,
@@ -146,7 +145,7 @@
 
                        //sessions
                        var paramsStoreNewSession = {
-                          TableName: 'sessions',
+                          TableName: 'my_sessions',
                           "Item" : {"email" : {"S" : escapedInputEmail},
                             "token" : {"S" : token},
                             "nbGood" : {"N" : nbGood},
@@ -187,10 +186,10 @@
      {
         path: '/stats',
         method: 'GET',
-        config: {
+        /*config: {
                 auth: {
                     strategy: 'token',
-                }},
+                }},*/
         handler: ( request, reply ) => { try {
                         var docClient = new AWS.DynamoDB.DocumentClient();
                         var table = "sessions";
@@ -239,8 +238,9 @@
                          console.log(myUniqueGuessId);
                          var guessItem = { "id": myUniqueGuessId ,"character" : myCar,
                                                   "timestamp" : Date.now()};
-                         _myConfig.server.tableOfCurrentGuess[myUniqueGuessId]=guessItem;
                          var stringGuessItem = JSON.stringify(guessItem);
+                         guessItem.index = indexHasard;
+                        _myConfig.server.tableOfCurrentGuess[myUniqueGuessId]=guessItem;
                         return reply(stringGuessItem).code(200);
                 } catch (ex)  {
             console.error("", ex.message);
@@ -248,7 +248,72 @@
                 }
         }       
         
-    },       
+    },
+        {   
+            path: '/guessCharacter', //TODO NOT BE PUT IN PRODUCTION
+            method: 'POST',
+            config: {
+                auth: {
+                    strategy: 'token',
+                }
+            },
+            handler: ( request, reply ) => { try {
+                       console.log("new call to: " + request.method + " " + request.path  +
+                                " with params " + ((request.params === null)? undefined: JSON.stringify(request.params)) +
+                                " and payload " + ((request.payload === null)? undefined: JSON.stringify(request.payload)) +
+                                " and scope credentials: " + request.auth.credentials.scope);
+                         var {id, userInputPinyin}=request.payload;
+                         var myResult = false;
+                         var charTobeGuessed = _myConfig.server.tableOfCurrentGuess[id];  //object like that set in GET guessCharacter             
+                
+                         console.log(JSON.stringify( _myConfig.server.tableOfCurrentGuess));
+                         console.log("charTobeGuessed:" + charTobeGuessed);
+                
+                         if (charTobeGuessed !== undefined &&
+                             CHINESE_CHARACTERS_JSON.table[charTobeGuessed.index].pinyin === userInputPinyin ) {
+                           myResult = true;
+                         }
+                        else {
+                          var _myCharacter = {};
+                          if (charTobeGuessed !== undefined) {
+                            _myCharacter= CHINESE_CHARACTERS_JSON.table[charTobeGuessed.index];
+                          }
+                          
+                          console.log("Wrong inputCharacter, user made a mistake " +
+                                          _myCharacter.caracter + " is in pinyin: " + _myCharacter.pinyin + " VS user input pinyin:" + userInputPinyin );                          
+                        } 
+                        
+                        var response = {"id": id,
+                                           "isGood" : myResult};
+                        
+                        // try to update character
+                        var scoresUpdated;
+                        try {
+                          scoresUpdated = SESSIONS.update(request, reply, console, myResult);
+                          if (scoresUpdated !== undefined) {
+                            if (scoresUpdated.nbFalse !== undefined) {
+                              response.nbFalse = scoresUpdated.nbFalse;
+                            }
+                            if (scoresUpdated.nbGood !== undefined) {
+                              response.nbGood = scoresUpdated.nbGood;
+                            }
+                          }
+                          else {
+                            console.error("Could not update scores: update aws call returned object undefined");
+                          }
+                        }
+                        catch (ex)  {
+                          console.error("Exception triggered when attempting to store update score", ex.message);
+                        }                        
+                        
+                        return reply(response).code(200);
+                } catch (ex)  {
+                    console.error("", ex.message);
+                    reply( 'server-side error' ).code(500);		
+                }
+        }       
+        
+    },  
     {   
             path: '/privacyCheckTestService', //TODO NOT BE PUT IN PRODUCTION
             method: 'GET',
@@ -276,17 +341,14 @@
         handler: ( request, reply ) => {
             var docClient = new AWS.DynamoDB.DocumentClient();
             var table = "sessions";
-            var email = "japprends.le.chinois.en.jouant@gmail.com";
             
             var params = {
                 TableName: table,
-                Key:{
-                "email": email,
-                "timeStampStart": "1516226874"
-                }
+                Limit : 100,
+                //Select : "COUNT"
             };
             
-            docClient.get(params, function(err, data) {
+            docClient.scan(params, function(err, data) {
               if (err) {
                 reply(err + ' Unable to read item');
               } else {
