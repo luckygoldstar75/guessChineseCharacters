@@ -6,7 +6,7 @@ import _log from './loggingTools';
 const SESSIONS =
 {
   __tableName : "my_sessions",
-  update : function (request, reply, console, lastResult) {
+  update : async function (request, reply, console, lastResult) {
 
                       var dynamoSessions = new AWS.DynamoDB();
                       var targetCounter = ((lastResult === true) ? "nbGood" : "nbFalse");          
@@ -49,7 +49,7 @@ const SESSIONS =
                           ReturnValues : "ALL_NEW"
                         };
             
-                    dynamoSessions.updateItem(params, function(err, data) { //WARN : TODO : GET ONLY the MAX timestamp session for user
+                    await dynamoSessions.updateItem(params, function(err, data) { //WARN : TODO : GET ONLY the MAX timestamp session for user
                       if (err) {
                         console.log(err + ': Unable to update item' + err.stack);
                         return undefined;
@@ -60,7 +60,7 @@ const SESSIONS =
                         console.log("data " + JSON.stringify(data));
                         //console.log("nbGood, nbFalse " + " " + nbGood + " " + nbFalse);
                         var _reply = {'nbGood': nbGood, 'nbFalse' : nbFalse};
-                        //console.log("_reply " + JSON.stringify(_reply));
+                        console.log("_reply " + JSON.stringify(_reply));
                         return _reply;
                       }
                     });                   

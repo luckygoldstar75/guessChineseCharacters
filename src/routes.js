@@ -60,7 +60,7 @@
                 const { email, password } = request.payload;
             console.log("password NEEDS to be checked: " + email +"/" +password);	 //todo : request.IPsource
             
-            var dbPlayers = new AWS.DynamoDB();
+            var ddb = new AWS.DynamoDB();
             var escapedInputEmail = (validator.escape(email)).toLowerCase();
             
             if(!validator.isEmail(escapedInputEmail)) {
@@ -75,7 +75,7 @@
             };
             
             console.log("before invocation of AWS.DynamoDB");
-            dbPlayers.getItem(params, function(err, data) {
+            ddb.getItem(params, function(err, data) {
               if (err) {  
                 return reply({
                         error: true,
@@ -121,7 +121,28 @@
                       _myConfig.server.tableOfCurrentConnections.push({token : {user: escapedInputEmail, expiryTime : expiryTimeForNewToken}});
                                
                 // Get last Session (OPTIONAL)
-                var nbGood =0, nbFalse=0;
+                var lastSession , nbGood =0, nbFalse=0;
+                
+                try {
+                          lastSession =  SESSIONS.retrieveLastSession(request, reply, console, escapedInputEmail);
+                          console.log("lastSession retrieved: ", lastSession);
+                          
+                          if (lastSession !== undefined) {
+                            if (lastSession.nbFalse !== undefined) {
+                              response.nbFalse = lastSession.nbFalse;
+                            }
+                            if (lastSession.nbGood !== undefined) {
+                              response.nbGood = lastSession.nbGood;
+                            }
+                          }
+                          else {
+                            console.error("Could not update scores: update aws call returned object undefined");
+                          }
+                    }
+                    catch (ex)  {
+                          console.error("Exception triggered when attempting to store update score", ex.message);
+                        }
+                
                 var params = {
                           TableName: 'my_sessions',
                           "ExpressionAttributeValues": {":escapedEmail" : {"S" : escapedInputEmail} },
@@ -130,7 +151,7 @@
                           ScanIndexForward: false
                         };
 
-              dbPlayers.query(params, function(err, data) { //WARN : TODO : GET ONLY the MAX timestamp session for user
+              ddb.query(params, function(err, data) { //WARN : TODO : GET ONLY the MAX timestamp session for user
                   if (err) {
                         console.log(err + ' Unable to read last session item');
                         
@@ -154,7 +175,7 @@
                           }
                         };
                        
-                       dbPlayers.putItem(paramsStoreNewSession, function(err, data) { //WARN : TODO : GET ONLY the MAX timestamp session for user
+                       ddb.putItem(paramsStoreNewSession, function(err, data) { //WARN : TODO : GET ONLY the MAX timestamp session for user
                         if (err) {
                           console.log(err + ' Unable to put new session item');                          
                         } else {
@@ -289,7 +310,9 @@
                         // try to update character
                         var scoresUpdated;
                         try {
-                          scoresUpdated = SESSIONS.update(request, reply, console, myResult);
+                          scoresUpdated =  SESSIONS.update(request, reply, console, myResult);
+                          console.log("scoresUpdated: ", scoresUpdated);
+                          
                           if (scoresUpdated !== undefined) {
                             if (scoresUpdated.nbFalse !== undefined) {
                               response.nbFalse = scoresUpdated.nbFalse;
