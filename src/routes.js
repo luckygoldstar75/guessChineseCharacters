@@ -7,14 +7,14 @@
     import CHINESE_CHARACTERS_JSON from './chineseCaracters.js';
     import SESSIONS from './CRUD-sessions.js';
     var SHA256 = require("crypto-js/sha256");
-    
+
     AWS.config.update({
       accessKeyId: "AKIAI25TDQD76X2NL3QQ",
       secretAccessKey: "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",
       region: "us-east-1",
       httpOptions: {timeout: 500}
   });
-    
+
     const routes = [
     {
         path: '/',
@@ -50,7 +50,7 @@
               return reply({
                         error: true,
                         errMessage: 'server-side error'
-              });		
+              });
             }}
     },
     {
@@ -59,37 +59,37 @@
             handler: ( request, reply ) => { try {
                 const { email, password } = request.payload;
             console.log("password NEEDS to be checked: " + email +"/" +password);	 //todo : request.IPsource
-            
+
             var ddb = new AWS.DynamoDB();
             var escapedInputEmail = (validator.escape(email)).toLowerCase();
-            
+
             if(!validator.isEmail(escapedInputEmail)) {
                 _log.logging(console,request,"INVALID EMAIL : escaped email : " + escapedInputEmail);
                 return reply('Input is not a valid email. Attempt has been reported!').code(200);
             }
-            
+
             //EMAIL VALIDATED: legt's check mdp in db
             var params = {
                 TableName: "my_players",
                 Key : {'email' : {S: escapedInputEmail}}
             };
-            
+
             console.log("before invocation of AWS.DynamoDB");
             ddb.getItem(params, function(err, data) {
-              if (err) {  
+              if (err) {
                 return reply({
                         error: true,
                         errMessage: err + ': Unable to read item'
                     });
               } else {
-                
+
                 if (data === undefined || data.Item === undefined) {
-                    return reply({  
+                    return reply({
                         error: true,
                         errMessage: "LOGIN/PASSWORD NOT FOUND"
                     });
                 }
-                
+
                 console.log("DATA: " + data );
                 var _reply= JSON.stringify(data.Item);
                 console.log("DATA: " + data + " REPLY: " +_reply);
@@ -98,9 +98,9 @@
                 var saltedPasswordHash=SHA256(sel + password).toString();
                 console.log("mdpsale: " + mdpsale + " sel: " +sel +  " saltedPasswordHash: " + saltedPasswordHash);
                 console.log(typeof(mdpsale) + " " +  typeof(saltedPasswordHash));
-                
+
                 if(saltedPasswordHash !== mdpsale.toString()) {
-                  return reply({  
+                  return reply({
                         error: true,
                         errMessage: "LOGIN/PASSWORD NOT FOUND"
                     });
@@ -113,20 +113,20 @@
                             algorithm: _myConfig.server.authAlgo,
                             expiresIn: _myConfig.server.authExpiracyInHours
                         });
-                  
+
                 console.log("good password");
-                
+
                 //store New session in memory
                 var expiryTimeForNewToken = Date.now() + _myConfig.server.authExpiracyInHours*3600*1000;
                       _myConfig.server.tableOfCurrentConnections.push({token : {user: escapedInputEmail, expiryTime : expiryTimeForNewToken}});
-                               
-                // Get last Session (OPTIONAL)
+
+                // Get last Session for scores updating (OPTIONAL / FALLBACK possible without updated scores)
                 var lastSession , nbGood =0, nbFalse=0;
-                
+
                 try {
                           lastSession =  SESSIONS.retrieveLastSession(request, reply, console, escapedInputEmail);
                           console.log("lastSession retrieved: ", lastSession);
-                          
+
                           if (lastSession !== undefined) {
                             if (lastSession.nbFalse !== undefined) {
                               response.nbFalse = lastSession.nbFalse;
@@ -142,7 +142,7 @@
                     catch (ex)  {
                           console.error("Exception triggered when attempting to store update score", ex.message);
                         }
-                
+
                 var params = {
                           TableName: 'my_sessions',
                           "ExpressionAttributeValues": {":escapedEmail" : {"S" : escapedInputEmail} },
@@ -154,8 +154,8 @@
               ddb.query(params, function(err, data) { //WARN : TODO : GET ONLY the MAX timestamp session for user
                   if (err) {
                         console.log(err + ' Unable to read last session item');
-                        
-                        return reply({    
+
+                        return reply({
                           'token' : token,
                           'scope': escapedInputEmail
                           //add expiration?
@@ -174,35 +174,35 @@
                             "timestamp" : { "N" : (Date.now()).toString()}
                           }
                         };
-                       
+
                        ddb.putItem(paramsStoreNewSession, function(err, data) { //WARN : TODO : GET ONLY the MAX timestamp session for user
                         if (err) {
-                          console.log(err + ' Unable to put new session item');                          
+                          console.log(err + ' Unable to put new session item');
                         } else {
-                          console.log('put new session with token:' + token +  " :Success"); 
+                          console.log('put new session with token:' + token +  " :Success");
                         }
-                                                
+
                         });
-                        
-                      return reply({    
+
+                      return reply({
                           'token' : token,
                           'scope': escapedInputEmail,
-                          'nbGood': nbGood, 
+                          'nbGood': nbGood,
                           'nbFalse' : nbFalse
                         });
                     }
               });
-              
+
 
                 }
-                }   
-               }       
+                }
+               }
     );} catch (ex)  {
               console.error("", ex.message);
               return reply({
                         error: true,
                         errMessage: 'server-side error'
-              });		
+              });
             }}},
      {
         path: '/stats',
@@ -218,13 +218,13 @@
                       var params = {
                           TableName: table,
                           ExpressionAttributeValues : {
-                          ':token' : {S : request.auth.credentials.token  }     
+                          ':token' : {S : request.auth.credentials.token  }
                           },
                           KeyConditionExpression: 'token = :token',
                           "Limit": 1,
                           ScanIndexForward: false
                         };
-            
+
                     docClient.get(params, function(err, data) { //WARN : TODO : GET ONLY the MAX timestamp session for user
                       if (err) {
                         reply(err + ' Unable to read item');
@@ -236,11 +236,11 @@
                     });
                 } catch (ex)  {
             console.error("", ex.message);
-                    reply( 'server-side error' ).code(500);		
-                }            
+                    reply( 'server-side error' ).code(500);
+                }
         }
     },
-    {   
+    {
             path: '/guessCharacter', //TODO NOT BE PUT IN PRODUCTION
             method: 'GET',
             config: {
@@ -265,12 +265,12 @@
                         return reply(stringGuessItem).code(200);
                 } catch (ex)  {
             console.error("", ex.message);
-                    reply( 'server-side error' ).code(500);		
+                    reply( 'server-side error' ).code(500);
                 }
-        }       
-        
+        }
+
     },
-        {   
+        {
             path: '/guessCharacter', //TODO NOT BE PUT IN PRODUCTION
             method: 'POST',
             config: {
@@ -284,35 +284,36 @@
                                 " and payload " + ((request.payload === null)? undefined: JSON.stringify(request.payload)) +
                                 " and scope credentials: " + request.auth.credentials.scope);
                          var {id, userInputPinyin}=request.payload;
-                         var myResult = false;
-                         var charTobeGuessed = _myConfig.server.tableOfCurrentGuess[id];  //object like that set in GET guessCharacter             
-                
+                         var isGood = false;
+                         var charTobeGuessed = _myConfig.server.tableOfCurrentGuess[id];  //object like that set in GET guessCharacter
+
                          console.log(JSON.stringify( _myConfig.server.tableOfCurrentGuess));
                          console.log("charTobeGuessed:" + charTobeGuessed);
-                
+
                          if (charTobeGuessed !== undefined &&
                              CHINESE_CHARACTERS_JSON.table[charTobeGuessed.index].pinyin === userInputPinyin ) {
-                           myResult = true;
+                           isGood = true;
                          }
                         else {
                           var _myCharacter = {};
                           if (charTobeGuessed !== undefined) {
                             _myCharacter= CHINESE_CHARACTERS_JSON.table[charTobeGuessed.index];
                           }
-                          
+
                           console.log("Wrong inputCharacter, user made a mistake " +
-                                          _myCharacter.caracter + " is in pinyin: " + _myCharacter.pinyin + " VS user input pinyin:" + userInputPinyin );                          
-                        } 
-                        
+                                          _myCharacter.caracter + " is in pinyin: " + _myCharacter.pinyin + " VS user input pinyin:" + userInputPinyin );
+                        }
+
                         var response = {"id": id,
-                                           "isGood" : myResult};
-                        
-                        // try to update character
-                        var scoresUpdated;
+                                           "isGood" : isGood};
+
+                        // try to update session with score
                         try {
-                          scoresUpdated =  SESSIONS.update(request, reply, console, myResult);
+                          var __auth=request.headers.authorization;
+                          var __email=request.auth.credentials.scope;
+                          var scoresUpdated = SESSIONS.update(__auth, __email, isGood,console, );
                           console.log("scoresUpdated: ", scoresUpdated);
-                          
+
                           if (scoresUpdated !== undefined) {
                             if (scoresUpdated.nbFalse !== undefined) {
                               response.nbFalse = scoresUpdated.nbFalse;
@@ -327,17 +328,17 @@
                         }
                         catch (ex)  {
                           console.error("Exception triggered when attempting to store update score", ex.message);
-                        }                        
-                        
+                        }
+
                         return reply(response).code(200);
                 } catch (ex)  {
                     console.error("", ex.message);
-                    reply( 'server-side error' ).code(500);		
+                    reply( 'server-side error' ).code(500);
                 }
-        }       
-        
-    },  
-    {   
+        }
+
+    },
+    {
             path: '/privacyCheckTestService', //TODO NOT BE PUT IN PRODUCTION
             method: 'GET',
             config: {
@@ -353,10 +354,10 @@
                         return reply('valid token').code(200);
                 } catch (ex)  {
             console.error("", ex.message);
-                    return reply( 'server-side error' ).code(500);		
+                    return reply( 'server-side error' ).code(500);
                 }
-        }       
-        
+        }
+
     },
     {
         path: '/listSessions',
@@ -364,13 +365,13 @@
         handler: ( request, reply ) => {
             var docClient = new AWS.DynamoDB.DocumentClient();
             var table = "sessions";
-            
+
             var params = {
                 TableName: table,
                 Limit : 100,
                 //Select : "COUNT"
             };
-            
+
             docClient.scan(params, function(err, data) {
               if (err) {
                 reply(err + ' Unable to read item');
@@ -379,11 +380,10 @@
                 reply(_reply);
               }
             });
-            
+
             //reply('Weird hello world! ==> u need 2 check what happened here!'); //.type('text/plain');
         }
-    }    
+    }
     ];
-    
+
     export default routes;
-    
