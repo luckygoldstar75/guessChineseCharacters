@@ -20,7 +20,13 @@
         path: '/',
         method: 'GET',
         handler: ( request, reply ) => {
-            reply.file('./devineLesCaracteres.html'); //.type('text/plain');
+			if (request.auth.isAuthenticated) {
+					reply.file('./devineLesCaracteres.html'); //.type('text/plain');
+			}
+			else {	
+				return h.redirect('/login');
+			}
+            
         }
     },
     {
@@ -35,7 +41,7 @@
             method: 'POST',
             handler: ( request, reply ) => { try {
                 const { email } = request.payload;
-            console.log("email check request received: " + email );	 //todo : request.IPsource
+            console.log("email check request received: " + email );	 //todo : request.IPsource pour logguer
             var escapedInputEmail = (validator.escape(email)).toLowerCase();
             console.log("escaped email to be checked: " + escapedInputEmail );
             if(!validator.isEmail(escapedInputEmail)) {
@@ -54,130 +60,130 @@
             }}
     },
     {
-            path: '/auth',
-            method: 'POST',
-            handler: async ( request, reply ) => { try {
-                const { email, password } = request.payload;
-            console.debug("password NEEDS to be checked: " + email +"/" + password);	 //todo : request.IPsource
+           path: '/login',
+           method: ['GET', 'POST'],
+           handler: async ( request, reply ) => { 
+			if (request.auth.isAuthenticated) {
+					return h.redirect('/');
+			}
+				
+			let message = '';
+			let account = null;			
+							
+			if (request.method === 'post') {
+				try {
+					const { email, password } = request.payload;
+					console.debug("password NEEDS to be checked: " + email +"/" + password);	 //todo : request.IPsource
 
-            var ddb = new AWS.DynamoDB();
+					var ddb = new AWS.DynamoDB();
 
-            //EMAIL VALIDATION
-            var escapedInputEmail = (validator.escape(email)).toLowerCase();
+					//EMAIL VALIDATION
+					var escapedInputEmail = (validator.escape(email)).toLowerCase();
 
-            if(!validator.isEmail(escapedInputEmail)) {
-                _log.logging(console,request,"INVALID EMAIL : escaped email : " + escapedInputEmail);
-                return reply('Input is not a valid email. Attempt has been reported!').code(200);
-            }
+					if(!validator.isEmail(escapedInputEmail)) {
+						_log.logging(console,request,"INVALID EMAIL : escaped email : " + escapedInputEmail);
+						return reply('Input is not a valid email. Attempt has been reported!').code(200);
+					}
 
-            //EMAIL VALIDATED: legt's check mdp in db
-            var params = {
-                TableName: "my_players",
-                Key : {'email' : {S: escapedInputEmail}}
-            };
+					//EMAIL VALIDATED: legt's check mdp in db
+					var params = {
+						TableName: "my_players",
+						Key : {'email' : {S: escapedInputEmail}}
+					};
 
-            console.debug("before invocation of AWS.DynamoDB");
-            ddb.getItem(params, async function(err, data) {
-              if (err) {
-                return reply({
-                        error: true,
-                        errMessage: err + ': Unable to read item'
-                    });
-              } 
-              else if (data === undefined || data.Item === undefined) {
-                    return reply({
-                        error: true,
-                        errMessage: "LOGIN/PASSWORD NOT FOUND"
-                    });
-               }
-			  else {	
-                console.debug("DATA: " + data );
-                var _reply= JSON.stringify(data.Item);
-                console.debug("DATA: " + data + " REPLY: " +_reply);
-                var mdpsale= data.Item["motDePasseSalé"].S;
-                var sel= data.Item.sel.S;
-                var saltedPasswordHash=SHA256(sel + password).toString();
-                console.debug("mdpsale: " + mdpsale + " sel: " +sel +  " saltedPasswordHash: " + saltedPasswordHash);
-                console.debug(typeof(mdpsale) + " " +  typeof(saltedPasswordHash));
+					console.debug("before invocation of AWS.DynamoDB");
+					ddb.getItem(params, async function(err, data) {
+					if (err) {
+						return reply({
+							error: true,
+							errMessage: err + ': Unable to read item'
+						});
+					}	 
+					else if (data === undefined || data.Item === undefined) {
+						return reply({
+							error: true,
+							errMessage: "LOGIN/PASSWORD NOT FOUND"
+						});
+					}
+					else {	
+						console.debug("DATA: " + data );
+						var _reply= JSON.stringify(data.Item);
+						console.debug("DATA: " + data + " REPLY: " +_reply);
+						var mdpsale= data.Item["motDePasseSalé"].S;
+						var sel= data.Item.sel.S;
+						var saltedPasswordHash=SHA256(sel + password).toString();
+		                console.debug("mdpsale: " + mdpsale + " sel: " +sel +  " saltedPasswordHash: " + saltedPasswordHash);
+		                console.debug(typeof(mdpsale) + " " +  typeof(saltedPasswordHash));
+		
+		                if(saltedPasswordHash !== mdpsale.toString()) {
+		                  return reply({
+		                        error: true,
+		                        errMessage: "LOGIN/PASSWORD NOT FOUND"
+		                    });
+		                }
+		                else { // account and input password DO match ==> Now : Register new session in db and memory
+		                  console.debug("good password");
+								
+						  const sid = String(++uuid);
+						  await request.server.app.cache.set(sid, { email }, 0);
+						  request.cookieAuth.set({ sid });
 
-                if(saltedPasswordHash !== mdpsale.toString()) {
-                  return reply({
-                        error: true,
-                        errMessage: "LOGIN/PASSWORD NOT FOUND"
-                    });
-                }
-                else { // account and input password DO match ==> Now : Register new session in db and memory
-                  const token = jwt.sign({
-                            escapedInputEmail,
-                            scope: escapedInputEmail
-                        }, _myConfig.server.privateKeyAuth, {
-                            algorithm: _myConfig.server.authAlgo,
-                            expiresIn: _myConfig.server.authExpiracyInHours
-                        });
-
-                console.debug("good password");
-
-                //store New session in memory
-                var expiryTimeForNewToken = Date.now() + _myConfig.server.authExpiracyInHours*3600*1000;
-                      _myConfig.server.tableOfCurrentConnections.push({token : {user: escapedInputEmail, expiryTime : expiryTimeForNewToken}});
-
-                // Get last Session for scores display (OPTIONAL / FALLBACK possible without updated scores)
-                var nbGood = undefined, nbFalse=undefined;
-
-                try {
-					
-					function getResult(err, myLastSession) {
-                          if (err !== undefined && err !== null) {
-                          console.error("error : " + err + err.stack);
-                          }
-                          else {
-                          console.log("lastSession retrieved: ", myLastSession);
-                          if (myLastSession !== undefined && myLastSession.nbFalse !== undefined && myLastSession.nbGood !== undefined) {
-							  nbGood = myLastSession.nbGood;
-							  nbFalse = myLastSession.nbFalse;
-                          }
-                          else {
-                            console.warn("Could not retrieve scores from last session: last session undefined");
-                           }
-                          }
-                          
-                        storeNewSession(escapedInputEmail,token , nbGood , nbFalse);  	
-                    }	
-					
-					SESSIONS.retrieveLastSession(console, escapedInputEmail, getResult);    
-                 }
-                 catch (ex)  {
-                          console.error("Exception triggered when attempting to store update score : ", ex.message);
-                 }
+						// Get last Session for scores display (OPTIONAL / FALLBACK possible without updated scores)
+		                var nbGood = undefined, nbFalse=undefined;
+		
+		                try {
+							
+							function getResult(err, myLastSession) {
+		                          if (err !== undefined && err !== null) {
+		                          console.error("error : " + err + err.stack);
+		                          }
+		                          else {
+		                          console.log("lastSession retrieved: ", myLastSession);
+		                          if (myLastSession !== undefined && myLastSession.nbFalse !== undefined && myLastSession.nbGood !== undefined) {
+									  nbGood = myLastSession.nbGood;
+									  nbFalse = myLastSession.nbFalse;
+		                          }
+		                          else {
+		                            console.warn("Could not retrieve scores from last session: last session undefined");
+		                           }
+		                          }
+		                          
+		                        storeNewSession(escapedInputEmail,sid , nbGood , nbFalse);  	
+		                    }	
+							
+							SESSIONS.retrieveLastSession(console, escapedInputEmail, getResult);    
+		                 }
+		                 catch (ex)  {
+		                          console.error("Exception triggered when attempting to store update score : ", ex.message);
+		                 }
                 
-                function storeNewSession(_escapedInputEmail,_token , _nbGood , _nbFalse) {  	
-                //STORE NEW SESSION TO DB (NOT ESSENTIAL : can play on memory but scores not updated in DB)
-                 try {
-					 
-				  console.log("_escapedInputEmail, _token, _nbGood, _nbFalse: " + _escapedInputEmail +"," + _token + "," + _nbGood + "," + _nbFalse);
-				  var response = {
-                            'token' : _token,
+					function storeNewSession(_escapedInputEmail,_sid , _nbGood , _nbFalse) {  	
+						//STORE NEW SESSION TO DB (NOT ESSENTIAL : can play on memory but scores not updated in DB)
+					 try {
+					   console.log("_escapedInputEmail, _token, _nbGood, _nbFalse: " + _escapedInputEmail +"," + _sid + "," + _nbGood + "," + _nbFalse);
+					   var response = {
+                            'sid' : _sid,
                             'scope': _escapedInputEmail,
                             'nbGood': _nbGood,
                             'nbFalse' : _nbFalse
                           };
 				
-				  function _afterCreate(err) {	
+					function _afterCreate(err) {	
 					  if (err !== null) {
 							response.err="WARN_SESSION_COULD_NOT_BE_SAVED_TO_DB";
 						}
 					   return reply(response);							
 					  }	
 					
-                  SESSIONS.create(_escapedInputEmail, _token, _nbGood, _nbFalse, _afterCreate);                  
-                }
-                catch (ex)  {
+					SESSIONS.create(_escapedInputEmail, _sid, _nbGood, _nbFalse, _afterCreate);                  
+					}
+					catch (ex)  {
                       console.error("Exception triggered when attempting to store new session", ex.message);
                       return reply({
                             level: WARN,
                             message: "session was memory stored but could not be saved in db"
                         });
-                }
+					}
               }
               }}});
           }
@@ -188,16 +194,20 @@
                         message: 'server-side error'
 				});
 		  }
+	}
+	else if (request.method === 'get') {
+        return '<html><head><title>Login page</title></head><body>' +
+            '<form method="post" action="/login">' +
+            'Email: <input type="text" name="email"><br>' +
+            'Password: <input type="password" name="password"><br/>' +
+            '<input type="submit" value="Login"></form></body></html>';
+	}
 	}},
      {
-        path: '/stats', // NOT FNCTIONAL : SERVER SIDE ERRORS : REDEFINE PURPOSE!!!!
+        path: '/stats', // NOT FUNCTIONAL : SERVER SIDE ERRORS : REDEFINE PURPOSE!!!!
         method: 'GET',
-        /*config: {
-                auth: {
-                    strategy: 'token',
-                }},*/
         handler: ( request, reply ) => { try {
-                        var docClient = new AWS.DynamoDB.DocumentClient();
+                      var docClient = new AWS.DynamoDB.DocumentClient();
 
                       var params = {
                           TableName: "my_sessions",
@@ -227,11 +237,6 @@
     {
             path: '/guessCharacter', //TODO NOT BE PUT IN PRODUCTION
             method: 'GET',
-            config: {
-                auth: {
-                    strategy: 'token',
-                }
-            },
             handler: ( request, reply ) => { try {
                        console.log("new call to: " + request.method + " " + request.path  +
                                 " with params " + ((request.params === null)? undefined: JSON.stringify(request.params)) +
@@ -257,11 +262,11 @@
         {
             path: '/guessCharacter', //TODO NOT BE PUT IN PRODUCTION : id must be grilled when used
             method: 'POST',
-            config: {
+           /* config: {
                 auth: {
-                    strategy: 'token',
+                    strategy: 'sid',
                 }
-            },
+            }, */ //TODO : necessary or not ?
             handler: async ( request, reply ) => { try {
                        console.log("new call to: " + request.method + " " + request.path  +
                                 " with params " + ((request.params === null)? undefined: JSON.stringify(request.params)) +
@@ -357,16 +362,16 @@
     {
             path: '/privacyCheckTestService', //TODO NOT BE PUT IN PRODUCTION
             method: 'GET',
-            config: {
+            /*config: {
                 auth: {
                     strategy: 'token',
                 }
-            },
+            },*/ //TODO : neccessary or not ?
             handler: ( request, reply ) => { try {
                     console.log("new call to: " + request.method + " " + request.path  +
                                 " with params " + ((request.params === null)? undefined: JSON.stringify(request.params)) +
                                 " and payload " + ((request.payload === null)? undefined: JSON.stringify(request.payload)) +
-                                " and scope credentials: " + request.auth.credentials.scope);
+                                " and scope credentials: " + request.server.app.cache.get(request.state['sid'].sid.email));
                         return reply('valid token').code(200);
                 } catch (ex)  {
             console.error("", ex.message);
