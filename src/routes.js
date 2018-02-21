@@ -1,19 +1,11 @@
     import jwt from 'jsonwebtoken';
     import _myConfig from './config';
-    import AWS from 'aws-sdk';
     import validator from 'validator';
     import _log from './loggingTools';
     import inert from 'inert';
     import CHINESE_CHARACTERS_JSON from './chineseCaracters.js';
     import SESSIONS from './CRUD-sessions.js';
     var SHA256 = require("crypto-js/sha256");
-
-    AWS.config.update({
-      accessKeyId: "AKIAI25TDQD76X2NL3QQ",
-      secretAccessKey: "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",
-      region: "us-east-1",
-      httpOptions: {timeout: 500}
-  });
 
     const routes = [
     {
@@ -24,7 +16,7 @@
 					reply.file('./devineLesCaracteres.html'); //.type('text/plain');
 			}
 			else {	
-				return h.redirect('/login');
+				return h.redirect('/login');	
 			}
             
         }
@@ -59,150 +51,7 @@
               });
             }}
     },
-    {
-           path: '/login',
-           method: ['GET', 'POST'],
-           handler: async ( request, reply ) => { 
-			if (request.auth.isAuthenticated) {
-					return h.redirect('/');
-			}
-				
-			let message = '';
-			let account = null;			
-							
-			if (request.method === 'post') {
-				try {
-					const { email, password } = request.payload;
-					console.debug("password NEEDS to be checked: " + email +"/" + password);	 //todo : request.IPsource
-
-					var ddb = new AWS.DynamoDB();
-
-					//EMAIL VALIDATION
-					var escapedInputEmail = (validator.escape(email)).toLowerCase();
-
-					if(!validator.isEmail(escapedInputEmail)) {
-						_log.logging(console,request,"INVALID EMAIL : escaped email : " + escapedInputEmail);
-						return reply('Input is not a valid email. Attempt has been reported!').code(200);
-					}
-
-					//EMAIL VALIDATED: legt's check mdp in db
-					var params = {
-						TableName: "my_players",
-						Key : {'email' : {S: escapedInputEmail}}
-					};
-
-					console.debug("before invocation of AWS.DynamoDB");
-					ddb.getItem(params, async function(err, data) {
-					if (err) {
-						return reply({
-							error: true,
-							errMessage: err + ': Unable to read item'
-						});
-					}	 
-					else if (data === undefined || data.Item === undefined) {
-						return reply({
-							error: true,
-							errMessage: "LOGIN/PASSWORD NOT FOUND"
-						});
-					}
-					else {	
-						console.debug("DATA: " + data );
-						var _reply= JSON.stringify(data.Item);
-						console.debug("DATA: " + data + " REPLY: " +_reply);
-						var mdpsale= data.Item["motDePasseSalé"].S;
-						var sel= data.Item.sel.S;
-						var saltedPasswordHash=SHA256(sel + password).toString();
-		                console.debug("mdpsale: " + mdpsale + " sel: " +sel +  " saltedPasswordHash: " + saltedPasswordHash);
-		                console.debug(typeof(mdpsale) + " " +  typeof(saltedPasswordHash));
-		
-		                if(saltedPasswordHash !== mdpsale.toString()) {
-		                  return reply({
-		                        error: true,
-		                        errMessage: "LOGIN/PASSWORD NOT FOUND"
-		                    });
-		                }
-		                else { // account and input password DO match ==> Now : Register new session in db and memory
-		                  console.debug("good password");
-								
-						  const sid = String(++uuid);
-						  await request.server.app.cache.set(sid, { email }, 0);
-						  request.cookieAuth.set({ sid });
-
-						// Get last Session for scores display (OPTIONAL / FALLBACK possible without updated scores)
-		                var nbGood = undefined, nbFalse=undefined;
-		
-		                try {
-							
-							function getResult(err, myLastSession) {
-		                          if (err !== undefined && err !== null) {
-		                          console.error("error : " + err + err.stack);
-		                          }
-		                          else {
-		                          console.log("lastSession retrieved: ", myLastSession);
-		                          if (myLastSession !== undefined && myLastSession.nbFalse !== undefined && myLastSession.nbGood !== undefined) {
-									  nbGood = myLastSession.nbGood;
-									  nbFalse = myLastSession.nbFalse;
-		                          }
-		                          else {
-		                            console.warn("Could not retrieve scores from last session: last session undefined");
-		                           }
-		                          }
-		                          
-		                        storeNewSession(escapedInputEmail,sid , nbGood , nbFalse);  	
-		                    }	
-							
-							SESSIONS.retrieveLastSession(console, escapedInputEmail, getResult);    
-		                 }
-		                 catch (ex)  {
-		                          console.error("Exception triggered when attempting to store update score : ", ex.message);
-		                 }
-                
-					function storeNewSession(_escapedInputEmail,_sid , _nbGood , _nbFalse) {  	
-						//STORE NEW SESSION TO DB (NOT ESSENTIAL : can play on memory but scores not updated in DB)
-					 try {
-					   console.log("_escapedInputEmail, _token, _nbGood, _nbFalse: " + _escapedInputEmail +"," + _sid + "," + _nbGood + "," + _nbFalse);
-					   var response = {
-                            'sid' : _sid,
-                            'scope': _escapedInputEmail,
-                            'nbGood': _nbGood,
-                            'nbFalse' : _nbFalse
-                          };
-				
-					function _afterCreate(err) {	
-					  if (err !== null) {
-							response.err="WARN_SESSION_COULD_NOT_BE_SAVED_TO_DB";
-						}
-					   return reply(response);							
-					  }	
-					
-					SESSIONS.create(_escapedInputEmail, _sid, _nbGood, _nbFalse, _afterCreate);                  
-					}
-					catch (ex)  {
-                      console.error("Exception triggered when attempting to store new session", ex.message);
-                      return reply({
-                            level: WARN,
-                            message: "session was memory stored but could not be saved in db"
-                        });
-					}
-              }
-              }}});
-          }
-		  catch (ex)  {
-              console.error("", ex.message);
-              return reply({
-                        level: ERROR,
-                        message: 'server-side error'
-				});
-		  }
-	}
-	else if (request.method === 'get') {
-        return '<html><head><title>Login page</title></head><body>' +
-            '<form method="post" action="/login">' +
-            'Email: <input type="text" name="email"><br>' +
-            'Password: <input type="password" name="password"><br/>' +
-            '<input type="submit" value="Login"></form></body></html>';
-	}
-	}},
+  ,
      {
         path: '/stats', // NOT FUNCTIONAL : SERVER SIDE ERRORS : REDEFINE PURPOSE!!!!
         method: 'GET',
@@ -260,13 +109,13 @@
 
     },
         {
-            path: '/guessCharacter', //TODO NOT BE PUT IN PRODUCTION : id must be grilled when used
+            path: '/guessCharacter', 
             method: 'POST',
-           /* config: {
+            config: {
                 auth: {
-                    strategy: 'sid',
+                    strategy: 'standard',
                 }
-            }, */ //TODO : necessary or not ?
+            },  //TODO : how to fo it for simple visitors / no account?
             handler: async ( request, reply ) => { try {
                        console.log("new call to: " + request.method + " " + request.path  +
                                 " with params " + ((request.params === null)? undefined: JSON.stringify(request.params)) +
@@ -309,33 +158,67 @@
 
                         // try to update session with score
                         try {
-                          var __auth=request.headers.authorization;
-                          var __email=request.auth.credentials.scope;
+                          var __sid=request.state['authsid'].sid;
+                          var __email=null;    
+                          request.server.app.cacheSession.get(__sid, (err, value, cached, log) => {
+									  if(err) {
+										  console.error("could not get session sid in cache: " + err )
+										}
+									  else {										  
+										  __email=value.email;
+										  console.log("Success: get session sid in cache: " + __email);
+										  SESSIONS.updateScore(__sid, __email, isGood, console, getResult);
+										  }
+								  });
+                          
+                          function printData(data, depth) {
+							    if (depth === 0)
+									return data;
+							    
+							    var str = '';
+							    for (var key in data) {
+										          if (typeof data[key] == 'object') str += key + printData(data[key], depth -1) + ' ';
+										                 else str += key + ' => ' + data[key] + ' ';
+								}
+								return str;
+						  };
+                          
+                          console.debug("__sid: " + __sid);
+                          //console.debug("request.server.app.cacheSession: " + printData(request.server.app.cacheSession, 2) + " request.server.app.cacheSession.get(__sid): " + request.server.app.cacheSession.get(__sid));
+                          console.debug("after print session");
                           
                           function getResult(err, _scoresUpdated) {
-                            if (err !== undefined && err !== null) {
-								console.error("error : " + err + err.stack);
-							}
-							else {
-								console.debug("_scoresUpdated: " + _scoresUpdated);
-								if (_scoresUpdated !== undefined && _scoresUpdated.error === undefined 
+							console.debug("_scoresUpdated: " + _scoresUpdated);
+							if (_scoresUpdated !== undefined && _scoresUpdated !== null && _scoresUpdated.error === undefined 
 									&& _scoresUpdated.nbFalse !== undefined && _scoresUpdated.nbGood !== undefined) {
 									response.nbFalse = _scoresUpdated.nbFalse;
 									response.nbGood = _scoresUpdated.nbGood;							
-								}
-								else {
-									console.warn("Could not update scores: update aws call returned object undefined");
-								}
-								
-								return reply(response).code(200);	
-							}	
+							}
+							
+                            if (err !== undefined && err !== null) {
+								console.warn("error : " + err + err.stack);
+								console.warn("Could not update scores: update aws call returned object undefined");
+								console.warn("response:" + response);
+								response.error="technical error : scores could not be updated";
+								console.warn("response:" + response);
+							}
+							
                           };	
                           
-                          SESSIONS.updateScore(__auth, __email, isGood,console, getResult);
+                          
                         }
                         catch (ex)  {
-                          console.error("Exception triggered when attempting to store update score", ex.message);
+						  response.error="technical error : scores could not be updated";	
+                          console.error("Exception triggered when attempting to store update score:", ex.message);
                         }
+                        finally {
+							console.debug("here am i: " + response);
+							for (var key in response) {
+								console.debug("key:" + key + " value" + response[key]) ;
+							}
+							
+                          return reply(response).code(200);
+						}
                 } catch (ex)  {
                     console.error("", ex.message);
                     reply( 'server-side error' ).code(500);

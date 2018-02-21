@@ -6,53 +6,29 @@ const server = new Hapi.Server();
 
 server.connection({ port: _myConfig.server.port, host: _myConfig.server.host });
 
-server.register( [require('inert')], ( err ) => {
-    if( !err ) {
-        console.log( 'done' );
-    }
+module.exports = server;
 
-} );
 
-    routes.forEach( ( route ) => {
+server.register([require('inert'), require('./server/auth/index.js')],
+  function(err) {	  
+	  if( err ) {
+			// Fancy error handling here
+			console.error( 'Error was handled!' );
+			console.error( err );
+			throw err;
+		}
+	  
+    //Start the server
+    console.log("attempt to start the server");
+
+	routes.forEach( ( route ) => {
         console.log( `attaching ${ route.path }` );
         server.route( route );
-    } );
+	});
 
-server.start( err => {
+    server.start( (err) => {
+		//Log to the console the host and port info
+        console.log('Server started at: ' + server.info.uri);
+    });
+});
 
-    if( err ) {
-
-        // Fancy error handling here
-        console.error( 'Error was handled!' );
-        console.error( err );
-
-    }
-    
-        const cache = server.cache({ segment: 'sessions', expiresIn: _myConfig.server.cookieExpirationTimeMs});
-		server.app.cache = cache;
-        
-        server.auth.strategy('session', 'cookie', {
-			password: _myConfig.server.privateKeyAuth,
-			cookie: 'sid',
-			redirectTo: '/login',
-			isSecure: false,
-			validateFunc: async (request, session) => {
-
-				const cached = await cache.get(session.sid);
-				const out = {
-					valid: !!cached
-				};
-
-				if (out.valid) {
-					out.credentials = cached.account;
-				}
-
-				return out;
-			}
-		});
-		
-		server.auth.default('session');
-
-    console.log( `Server started at ${ server.info.uri }` );
-
-} );

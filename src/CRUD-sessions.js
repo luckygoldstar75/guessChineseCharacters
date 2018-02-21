@@ -6,21 +6,18 @@ import _log from './loggingTools';
 const SESSIONS =
 {
   __tableName : "my_sessions",
-  updateScore : function (__auth, __email, isGood, console, callback ) {
+  updateScore : function (__token, __email, isGood, console, callback ) {
                       var ddb = new AWS.DynamoDB();
                       var targetCounter = ((isGood === true) ? "nbGood" : "nbFalse");
                       console.debug("targetCounter :", targetCounter );
-                      var __token = undefined;
 
                       console.debug("email: " + __email);
 
-                      if (__auth !=null) {
-                        __token = __auth.split(" ")[1];
-                      }
                       console.debug("TOKEN: " + __token);
 
                       if(__token === undefined || __email===undefined) {
-                         callback("SESSION NOT FOUND", null);
+                         callback("SESSION NOT FOUND ", null);
+                         return;
                       }
 
                       var params = {
@@ -45,8 +42,8 @@ const SESSIONS =
                     var _reply= undefined;    
                     ddb.updateItem(params, async function(err, data) { //WARN : TODO : GET ONLY the MAX timestamp session for user
                       if (err) {
-                        console.log(err + ': Unable to update item' + err.stack);
-                        callback("unable to update item in repository", null);
+                        console.log(err + ': Unable to update item ' + err.stack);
+                        callback("unable to update item in repository ", null);
                       } else {
                         var nbGood=data.Attributes.nbGood.N;
                         var nbFalse=data.Attributes.nbFalse.N;
