@@ -84,8 +84,18 @@
         }
     },
     {
-            path: '/guessCharacter', //TODO NOT BE PUT IN PRODUCTION
+            path: '/guessCharacter',
             method: 'GET',
+            config : {
+		      auth: {
+                    strategy: 'standard'                    
+                }, 
+			  cors: {
+				origin: ['http://localhost:3000'],
+				credentials : true,
+				additionalHeaders: ['cache-control', 'x-requested-with', 'accept-language', "Access-Control-Allow-Origin","Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type"]
+		      }
+		    },            
             handler: ( request, reply ) => { try {
                        console.log("new call to: " + request.method + " " + request.path  +
                                 " with params " + ((request.params === null)? undefined: JSON.stringify(request.params)) +
@@ -154,7 +164,8 @@
                         }
 
                         var response = {"id": id,
-                                           "isGood" : isGood};
+                                           "isGood" : isGood,
+                                           "answer" : CHINESE_CHARACTERS_JSON.table[charTobeGuessed.index].pinyin};
 
                         // try to update session with score
                         try {

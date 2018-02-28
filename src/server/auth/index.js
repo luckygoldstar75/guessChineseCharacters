@@ -65,26 +65,38 @@ function loadAuthRoutes()
         path: '/logout',
         config: {
             auth: {
-                    strategy: 'standard',
-                },
-            handler: function(request, reply) {
+                    strategy: 'standard'                    
+                },            
+		},
+        handler: function(request, reply) {
 				console.debug("REQUEST AUTH: " + JSON.stringify(request.auth));
 				request.server.app.cacheSession.drop(request.state['authsid'].sid);
                 request.cookieAuth.clear();
                 return reply('Logout Successful!');
             }
-        }
     });	
-
+	
+	
     server.route(
       {
            path: '/login',
            method: ['GET', 'POST'],
            config : {
-		   auth : false,
-           handler: async ( request, reply ) => { 
-			if (request.auth.isAuthenticated) {
-					return h.redirect('/');
+		    auth : false,
+			cors: {
+				origin: ['http://localhost:3000'],
+				credentials : true,
+				additionalHeaders: ['cache-control', 'x-requested-with', 'accept-language', "Access-Control-Allow-Origin","Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type", "CORELATION_ID"]
+		   }},
+           handler: async ( request, reply ) => {
+			if (request.method === 'get') { // TODO FIX : not working
+				var isLoggedIn = false;
+		
+				if (request.auth.isAuthenticated)	 {
+					isLoggedIn = true;
+				}
+        
+				return reply({'isLoggedIn' : isLoggedIn})
 			}
 				
 			let message = '';
@@ -95,12 +107,19 @@ function loadAuthRoutes()
 					const { email, password } = request.payload;
 					console.debug("password NEEDS to be checked: " + email +"/" + password);	 //todo : request.IPsource
 
+					if (email == null || password == null) {
+						return reply({
+							error: true,
+							errMessage: "LOGIN/PASSWORD sont obligatoires"
+						});
+					}
+
 					var ddb = new AWS.DynamoDB();
 
 					//EMAIL VALIDATION
 					var escapedInputEmail = (validator.escape(email)).toLowerCase();
 
-					if(!validator.isEmail(escapedInputEmail)) {
+					if(escapedInputEmail == null || !validator.isEmail(escapedInputEmail)) {
 						_log.logging(console,request,"INVALID EMAIL : escaped email : " + escapedInputEmail);
 						return reply('Input is not a valid email. Attempt has been reported!').code(200);
 					}
@@ -133,7 +152,7 @@ function loadAuthRoutes()
 						var sel= data.Item.sel.S;
 						var saltedPasswordHash=SHA256(sel + password).toString();
 		                console.debug("mdpsale: " + mdpsale + " sel: " +sel +  " saltedPasswordHash: " + saltedPasswordHash);
-		                console.debug(typeof(mdpsale) + " " +  typeof(saltedPasswordHash));
+		                //console.debug(typeof(mdpsale) + " " +  typeof(saltedPasswordHash));
 		
 		                if(saltedPasswordHash !== mdpsale.toString()) {
 		                  return reply({
@@ -195,6 +214,7 @@ function loadAuthRoutes()
 					  if (err !== null) {
 							response.err="WARN_SESSION_COULD_NOT_BE_SAVED_TO_DB";
 						}
+						console.log("just before returning response to login");
 					   return reply(response);							
 					  }	
 					
@@ -211,21 +231,14 @@ function loadAuthRoutes()
               }}});
           }
 		  catch (ex)  {
-              console.error("", ex.message);
+              console.error("login error : ", ex.message);
               return reply({
                         level: ERROR,
                         message: 'server-side error'
 				});
 		  }
-	}
-	else if (request.method === 'get') {
-        return '<html><head><title>Login page</title></head><body>' +
-            '<form method="post" action="/login">' +
-            'Email: <input type="text" name="email"><br>' +
-            'Password: <input type="password" name="password"><br/>' +
-            '<input type="submit" value="Login"></form></body></html>';
-	}
-	}}});
+		}
+	}});
 	
 
 
