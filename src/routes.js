@@ -292,7 +292,33 @@
             SESSIONS.listSessions(callback);
             //reply('Weird hello world! ==> u need 2 check what happened here!'); //.type('text/plain');
         }
-    }
-    ];
+    },
+    ,
+    {
+        path: '/rank',
+        method: 'GET',
+        config: {
+            auth: {
+                    strategy: 'standard'                    
+                },            
+		},
+        handler: ( request, reply ) => {			
+		  const myUserLoggedIn = {
+			pseudo: 'titi',
+			lastSession: "2018-01-02",
+			name: 'Hello Kitty',
+			avatarUrl: 'http://placekitten.com/g/64/64',
+			rank : "11",
+			nbPoints : "94230"
+		  };
+  
+		  const myUser = {
+			
+		  };  	  
+		 
+		  return reply(myUserLoggedIn).code(200);
+		}
+   }
+];
 
-    export default routes;
+export default routes;
