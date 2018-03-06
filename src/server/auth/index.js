@@ -171,7 +171,7 @@ function loadAuthRoutes()
 							  }});
 						  
 						// Get last Session for scores display (OPTIONAL / FALLBACK possible without updated scores)
-		                var nbGood = undefined, nbFalse=undefined;
+		                var nbGood , nbFalse, userLastSession;
 		
 		                try {
 							
@@ -184,6 +184,8 @@ function loadAuthRoutes()
 		                          if (myLastSession !== undefined && myLastSession.nbFalse !== undefined && myLastSession.nbGood !== undefined) {
 									  nbGood = myLastSession.nbGood;
 									  nbFalse = myLastSession.nbFalse;
+									  userLastSession = myLastSession.timestamp;
+									  
 		                          }
 		                          else {
 		                            console.warn("Could not retrieve scores from last session: last session undefined");
@@ -207,7 +209,9 @@ function loadAuthRoutes()
                             'sid' : _sid,
                             'scope': _escapedInputEmail,
                             'nbGood': _nbGood,
-                            'nbFalse' : _nbFalse
+                            'nbFalse' : _nbFalse,
+                            'lastSession' : userLastSession,
+                            'avatarUrl' : data.avatarUrl
                           };
 				
 					function _afterCreate(err) {	
