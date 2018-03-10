@@ -66,15 +66,26 @@ function loadAuthRoutes()
         config: {
             auth: {
                     strategy: 'standard'                    
-                },            
+                },
+            cors: {
+				origin: ['http://localhost:3000'],
+				credentials : true,
+				additionalHeaders: ['cache-control', 'x-requested-with', 'accept-language', "Access-Control-Allow-Origin","Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type"]
+		   }            
 		},
         handler: function(request, reply) {
+			try {
 				console.debug("REQUEST AUTH: " + JSON.stringify(request.auth));
 				request.server.app.cacheSession.drop(request.state['authsid'].sid);
                 request.cookieAuth.clear();
-                return reply('Logout Successful!');
-            }
-    });	
+                return reply('Logout Successful!').code(200);
+			}
+			catch(ex) {
+				console.error("Exception triggered when attempting to logout : ", ex.message);
+				return reply('Logout Failure!').code(500);
+			}
+       }
+    });
 	
 	
     server.route(
@@ -86,7 +97,7 @@ function loadAuthRoutes()
 			cors: {
 				origin: ['http://localhost:3000'],
 				credentials : true,
-				additionalHeaders: ['cache-control', 'x-requested-with', 'accept-language', "Access-Control-Allow-Origin","Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type", "CORELATION_ID"]
+				additionalHeaders: ['cache-control', 'x-requested-with', 'accept-language', "Access-Control-Allow-Origin","Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type"]
 		   }},
            handler: async ( request, reply ) => {
 			if (request.method === 'get') { // TODO FIX : not working
@@ -173,8 +184,7 @@ function loadAuthRoutes()
 						// Get last Session for scores display (OPTIONAL / FALLBACK possible without updated scores)
 		                var nbGood , nbFalse, userLastSession;
 		
-		                try {
-							
+		                try {							
 							function getResult(err, myLastSession) {
 		                          if (err !== undefined && err !== null) {
 		                          console.error("error : " + err + err.stack);
@@ -211,7 +221,8 @@ function loadAuthRoutes()
                             'nbGood': _nbGood,
                             'nbFalse' : _nbFalse,
                             'lastSession' : userLastSession,
-                            'avatarUrl' : data.avatarUrl
+                            'avatarUrl' : data.Item.avatarUrl.S,
+                            'pseudo' : data.Item.pseudo.S
                           };
 				
 					function _afterCreate(err) {	
