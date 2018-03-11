@@ -78,7 +78,7 @@ handler: ( request, reply ) => { try {
 				var {nbGood, nbFalse}=data;
 				var _reply = {'nbGood': nbGood, 'nbFalse' : nbFalse};
 				reply(JSON.stringify(_reply));
-			  }
+			  }	
 			});
 		} catch (ex)  {
 	console.error("", ex.message);
@@ -90,20 +90,17 @@ handler: ( request, reply ) => { try {
 	path: '/guessCharacter',
 	method: 'GET',
 	config : {
-      auth: {
-			strategy: 'standard'                    
-		}, 
+      auth: false,
 	  cors: {
 		origin: ['http://localhost:3000'],
-		credentials : true,
+		//credentials : true,
 		additionalHeaders: ['cache-control', 'x-requested-with', 'accept-language', "Access-Control-Allow-Origin","Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type"]
       }
     },            
 	handler: ( request, reply ) => { try {
 			   console.log("new call to: " + request.method + " " + request.path  +
 						" with params " + ((request.params === null)? undefined: JSON.stringify(request.params)) +
-						" and payload " + ((request.payload === null)? undefined: JSON.stringify(request.payload)) +
-						" and scope credentials: " + request.auth.credentials.scope);
+						" and payload " + ((request.payload === null)? undefined: JSON.stringify(request.payload)));
 				 var indexHasard=Math.floor((Math.random() * CHINESE_CHARACTERS_JSON.table.length));
 				 var myCar = CHINESE_CHARACTERS_JSON.table[indexHasard].caracter;
 				 var myUniqueGuessId=_myConfig.guid();
@@ -125,15 +122,12 @@ handler: ( request, reply ) => { try {
 	path: '/guessCharacter', 
 	method: 'POST',
 	config: {
-		auth: {
-			strategy: 'standard',
-		}
+		auth: false 
 	},  //TODO : how to fo it for simple visitors / no account?
 	handler: async ( request, reply ) => { try {
 			   console.log("new call to: " + request.method + " " + request.path  +
 						" with params " + ((request.params === null)? undefined: JSON.stringify(request.params)) +
-						" and payload " + ((request.payload === null)? undefined: JSON.stringify(request.payload)) +
-						" and scope credentials: " + request.auth.credentials.scope);
+						" and payload " + ((request.payload === null)? undefined: JSON.stringify(request.payload)));
 				 var {id, userInputPinyin}=request.payload;
 				 
 				 if(_myConfig.server.tableOfCurrentGuess[id] === null || _myConfig.server.tableOfCurrentGuess[id] === undefined) {
@@ -153,7 +147,7 @@ handler: ( request, reply ) => { try {
 				 console.log("charTobeGuessed:" + charTobeGuessed);
 
 				 if (charTobeGuessed !== undefined &&
-					 CHINESE_CHARACTERS_JSON.table[charTobeGuessed.index].pinyin === userInputPinyin ) {
+					 CHINESE_CHARACTERS_JSON.table[charTobeGuessed.index].pinyin === validator.escape(userInputPinyin) ) {
 				   isGood = true;
 				 }
 				else {

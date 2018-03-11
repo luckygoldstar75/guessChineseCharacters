@@ -18,7 +18,7 @@ exports.register = function(server, options, next) {
     ], function(err) {
         if (err) {
             console.error('Failed to load a plugin:', err);
-            throw err;
+            throw err;	
         }
 
         // Set our server authentication strategy
