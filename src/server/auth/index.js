@@ -260,9 +260,7 @@ function loadAuthRoutes()
 console.log("Routes for auth plugin loaded");
 }};
 
-
-
 exports.register.attributes = {
 	name : 'authPlugin',
-	//version : '1.0.0'
+	version : '1.0.0'
 };
