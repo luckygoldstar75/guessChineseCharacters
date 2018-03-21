@@ -4,7 +4,7 @@ import _myConfig from './config';
 
 const server = new Hapi.Server();
 
-server.connection({ port: _myConfig.server.port, 
+server.connection({ port: process.env.PORT || _myConfig.server.port , 
 	host: _myConfig.server.host,
 	routes : { cors : true } });
 
