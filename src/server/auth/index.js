@@ -142,7 +142,7 @@ function loadAuthRoutes()
 					};
 
 					console.debug("before invocation of AWS.DynamoDB");
-					ddb.getItem(params, async function(err, data) {
+					ddb.getItem(uy-, async function(err, data) {
 					if (err) {
 						return reply({
 							error: true,

@@ -1,6 +1,9 @@
 'use strict';
-const CHINESE_CHARACTERS_JSON = {
- "table"  : [
+
+
+const CHINESE_CHARACTERS_JSON = [];
+
+CHINESE_CHARACTERS_JSON[1]=[
 {"pinyin":"ān" , "caracter": "安", "translation" : "paix", "hint" : "femme sous toît"},
 {"pinyin":"bàba" , "caracter": "爸爸", "translation" : "papa", "hint" : ""},
 {"pinyin":"māma" , "caracter": "媽媽", "translation" : "mère|maman", "hint" : "genre féminin + puis le ma phonétique"},
@@ -30,7 +33,8 @@ const CHINESE_CHARACTERS_JSON = {
 {"pinyin":"bù" , "caracter" : "不", "translation" :  "ne pas", "hint" : ""},
 {"pinyin":"wǒ" , "caracter" : "我", "translation" :  "je,moi", "hint" : ""},
 {"pinyin":"xièxie" , "caracter" : "谢谢", "translation" :  "merci", "hint" : ""},
-{"pinyin":"xiǎo" , "caracter" : "小", "translation" :  "petit", "hint" : ""},
+{"pinyin":"xiǎo" , "caracter" : "小", "translation" :  "petit", "hint" : ""}];
+CHINESE_CHARACTERS_JSON[2]=[
 {"pinyin":"shì" , "caracter" : "是", "translation" :  "être", "hint" : "sous le soleil , exactement."},
 {"pinyin":"bù kèqì" , "caracter" : "不客氣", "translation" :  "pas de quoi", "hint" : "(ne) pas , politesse"},
 {"pinyin":"jiào" , "caracter" : "叫", "translation" :  "s'appeler", "hint" : "la clé bouche!"},
@@ -61,6 +65,64 @@ const CHINESE_CHARACTERS_JSON = {
 {"pinyin":"hái", "caracter" : "還", "translation" :  "ou bien encore", "hint" : ""},
 {"pinyin":"lǎoshī, wǒ zài zhèlǐ" , "caracter" : "老師, 我 再 這里", "translation" :  "Professeur, je suis ici", "hint" : ""},
 {"pinyin":"nǐ shì Xiǎomíng ma ?" , "caracter" : "你 是 小明 嗎?", "translation" :  "Tu es Xiaming n'est pas", "hint" : ""}
-]}
+]
 ;
-export default CHINESE_CHARACTERS_JSON ;
+
+const MAX_LEVEL_GUESSCHARACTER_GAME = CHINESE_CHARACTERS_JSON.length;
+
+function computeNbTotalElements() {
+	var _totalNbElements = 0;
+	for (var i=1; i< CHINESE_CHARACTERS_JSON.length; i++) {
+		_totalNbElements +=  CHINESE_CHARACTERS_JSON[i].length;	
+	}
+	return _totalNbElements;
+}
+
+const TOTAL_NB_ELEMENTS = computeNbTotalElements();
+
+function pickLevelIndexRandom(levelIndex) {
+	var randomIndex=Math.floor((Math.random() *1000000)) % 20;
+	var delta = 0;
+	
+	if (randomIndex <=11) {return levelIndex;}
+	else if (randomIndex <= 15) {
+		delta =1;
+	}
+	else if (randomIndex <= 17) {
+		delta=2;	
+	}
+	else {
+		delta = 3;
+	}
+	
+	
+	if (levelIndex > 1 && levelIndex < MAX_LEVEL_GUESSCHARACTER_GAME) {
+			var delta = -1;
+			if(random %2 == 0) delta = 1;
+			return levelIndex + delta;	
+	}
+	else if (levelIndex < MAX_LEVEL_GUESSCHARACTER_GAME) {
+			return levelIndex +1;
+	}
+	else if (levelIndex > 1) { return (levelIndex -1); }
+	else return 1 ; //Default value
+
+}
+
+function getNextRandomCharacter(level) {
+	if (level == null || level < 0 || level > MAX_LEVEL_GUESSCHARACTER_GAME) {
+		var randomIndex=Math.floor((Math.random()*100000)) % TOTAL_NB_ELEMENTS;
+		console.debug("Method " , getNextRandomCharacter.name, " NB TOTAL ELEMENTS: " ,TOTAL_NB_ELEMENTS);
+		var currentIndex =0;
+		for (var i=1; i< CHINESE_CHARACTERS_JSON.length; i++) {
+			if(randomIndex < CHINESE_CHARACTERS_JSON[i].length) {return CHINESE_CHARACTERS_JSON[i][randomIndex];}
+			else { randomIndex -= CHINESE_CHARACTERS_JSON[i].length;  }		
+		}	
+	}
+	
+	// level is OK in good boundaries
+	var _levelIndex = pickLevelIndexRandom(level);
+	return CHINESE_CHARACTERS_JSON[_levelIndex][Math.floor((Math.random() *100000)) % CHINESE_CHARACTERS_JSON[_levelIndex]];
+}
+
+export default {CHINESE_CHARACTERS_JSON , getNextRandomCharacter};

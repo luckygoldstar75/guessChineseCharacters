@@ -87,7 +87,7 @@ handler: ( request, reply ) => { try {
 }
 },
 {
-	path: '/guessCharacter',
+	path: '/guessCharacter/{level?}',
 	method: 'GET',
 	config : {
       auth: false,
@@ -97,22 +97,32 @@ handler: ( request, reply ) => { try {
 		additionalHeaders: ['cache-control', 'x-requested-with', 'accept-language', "Access-Control-Allow-Origin","Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type"]
       }
     },            
-	handler: ( request, reply ) => { try {
-			   console.log("new call to: " + request.method + " " + request.path  +
+	handler: ( request, reply ) => { try {	
+			   console.log("new call to: " + request.method + " " + request.path  + "/{level} with level " + request.params.level +
 						" with params " + ((request.params === null)? undefined: JSON.stringify(request.params)) +
 						" and payload " + ((request.payload === null)? undefined: JSON.stringify(request.payload)));
-				 var indexHasard=Math.floor((Math.random() * CHINESE_CHARACTERS_JSON.table.length));
-				 var myCar = CHINESE_CHARACTERS_JSON.table[indexHasard].caracter;
+			
+				 var _level=null;
+				 
+				 console.log("Request Params: ", request.params);
+				 console.log("Request Params: level", request.params.level);
+				 
+				 if (request.params  && request.params.level && typeof request.params.level ==="number" )  {
+					console.log("raw level from URL: ", level);
+					_level=encodeURIComponent(request.params.level);
+					console.log("level computed from url: ", _level);
+				 }
+				 var myCar = CHINESE_CHARACTERS_JSON.getNextRandomCharacter(_level);
 				 var myUniqueGuessId=_myConfig.guid();
-				 console.log(myUniqueGuessId);
+				 console.log("myUniqueGuessId: ", myUniqueGuessId);
+				 // TODO : see if needed to obfuscate characters so as to not get them stolen : myCar.pinyin="forYouToGuess";
 				 var guessItem = { "id": myUniqueGuessId ,"character" : myCar,
 										  "timestamp" : Date.now()};
 				 var stringGuessItem = JSON.stringify(guessItem);
-				 guessItem.index = indexHasard;
 				_myConfig.server.tableOfCurrentGuess[myUniqueGuessId]=guessItem;
 				return reply(stringGuessItem).code(200);
 		} catch (ex)  {
-	console.error("", ex.message);
+	console.error("Exception catchée: ", ex.message, ex.stack);
 			reply( 'server-side error' ).code(500);
 		}
 }
@@ -125,7 +135,7 @@ handler: ( request, reply ) => { try {
 		auth: false 
 	},  //TODO : how to fo it for simple visitors / no account?
 	handler: async ( request, reply ) => { try {
-			   console.log("new call to: " + request.method + " " + request.path  +
+			   console.log("new call POST to: " + request.method + " " + request.path  +
 						" with params " + ((request.params === null)? undefined: JSON.stringify(request.params)) +
 						" and payload " + ((request.payload === null)? undefined: JSON.stringify(request.payload)));
 				 var {id, userInputPinyin}=request.payload;
@@ -140,29 +150,22 @@ handler: ( request, reply ) => { try {
 				 
 				 var isGood = false;
 				 var charTobeGuessed = _myConfig.server.tableOfCurrentGuess[id];  //object set in GET guessCharacter
-				 if (charTobeGuessed !== undefined || charTobeGuessed !== undefined) { // the guess is now to be erased : it has been tested for guess once
-					delete _myConfig.server.tableOfCurrentGuess[id];
-				 }
 				 console.log(JSON.stringify( _myConfig.server.tableOfCurrentGuess));
-				 console.log("charTobeGuessed:" + charTobeGuessed);
+				 console.log("charTobeGuessed:" +  JSON.stringify(charTobeGuessed));
 
-				 if (charTobeGuessed !== undefined &&
-					 CHINESE_CHARACTERS_JSON.table[charTobeGuessed.index].pinyin === validator.escape(userInputPinyin) ) {
+				delete _myConfig.server.tableOfCurrentGuess[id]; // the guess is now to be erased : it has been tested for guess once
+		
+				if (charTobeGuessed.character.pinyin === validator.escape(userInputPinyin) ) {
 				   isGood = true;
 				 }
 				else {
-				  var _myCharacter = {};
-				  if (charTobeGuessed !== undefined) {
-					_myCharacter= CHINESE_CHARACTERS_JSON.table[charTobeGuessed.index];
-				  }
-
 				  console.log("Wrong inputCharacter, user made a mistake " +
-								  _myCharacter.caracter + " is in pinyin: " + _myCharacter.pinyin + " VS user input pinyin:" + userInputPinyin );
+								  charTobeGuessed.caracter + " is in pinyin: " + charTobeGuessed.pinyin + " VS user input pinyin:" + userInputPinyin );
 				}
 
 				var response = {"id": id,
 								   "isGood" : isGood,
-								   "answer" : CHINESE_CHARACTERS_JSON.table[charTobeGuessed.index].pinyin};
+								   "answer" : charTobeGuessed.character.pinyin};
 
 				// try to update session with score
 				try {
@@ -228,7 +231,7 @@ handler: ( request, reply ) => { try {
 				  return reply(response).code(200);
 				}
 		} catch (ex)  {
-			console.error("", ex.message);
+			console.error("", ex.message,ex.stack);
 			reply( 'server-side error' ).code(500);
 		}
 }
@@ -337,7 +340,7 @@ handler: ( request, reply ) => {
 					  if (__email != null) {
 						  console.log("just before LEADERBOARDS.retrieve");		
 						  try {
-							LEADERBOARDS.retrieveRank(__email, getRank);
+							//LEADERBOARDS.retrieveRank(__email, getRank);
 						  }
 						  catch (ex)  {
 							console.error("getting rank error : ", ex.message);
