@@ -142,11 +142,12 @@ function loadAuthRoutes()
 					};
 
 					console.debug("before invocation of AWS.DynamoDB");
-					ddb.getItem(uy-, async function(err, data) {
+					ddb.getItem(params, async function(err, data) {
 					if (err) {
+                  console.log("login failed: could not get in DynamoDb", err, err.stack);
 						return reply({
 							error: true,
-							errMessage: err + ': Unable to read item'
+							errMessage: 'We are experiencing temporary technical issue: Unable to login'
 						});
 					}	 
 					else if (data === undefined || data.Item === undefined) {

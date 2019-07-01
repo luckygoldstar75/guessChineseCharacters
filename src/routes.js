@@ -155,7 +155,7 @@ handler: ( request, reply ) => { try {
 
 				delete _myConfig.server.tableOfCurrentGuess[id]; // the guess is now to be erased : it has been tested for guess once
 		
-				if (charTobeGuessed.character.pinyin === validator.escape(userInputPinyin) ) {
+				if (charTobeGuessed.character.pinyin.toLowerCase() === validator.escape(userInputPinyin).toLowerCase() ) {
 				   isGood = true;
 				 }
 				else {
@@ -340,7 +340,7 @@ handler: ( request, reply ) => {
 					  if (__email != null) {
 						  console.log("just before LEADERBOARDS.retrieve");		
 						  try {
-							//LEADERBOARDS.retrieveRank(__email, getRank);
+							LEADERBOARDS.retrieveRank(__email, getRank);
 						  }
 						  catch (ex)  {
 							console.error("getting rank error : ", ex.message);

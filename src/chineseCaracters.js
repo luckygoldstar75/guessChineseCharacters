@@ -18,7 +18,7 @@ CHINESE_CHARACTERS_JSON[1]=[
 {"pinyin":"Wǒ jiā zài zhèlǐ" , "caracter": "我 家 在 這里", "translation" : "Je maison/foyer exister ici", "hint" : ""},
 {"pinyin":"nǎlǐ" , "caracter": "哪里", "translation" : "là-bas", "hint" : "où à l'interieur du vilage"},
 {"pinyin":"Nǐ jiā zài nǎlǐ?" , "caracter": "你 家 在 哪里?", "translation" : "Où se trouve ta maison?", "hint" : ""},
-{"pinyin":"zài" , "caracter": "再", "translation" :  "de nouveau", "hint" : ""},
+{"pinyin":"zài" , "caracter": "在", "translation" :  "de nouveau", "hint" : ""},
 {"pinyin":"jiàn" , "caracter": "見", "translation" :  "voir", "hint" : "clé de l'oeil actif!"},
 {"pinyin":"zàijiàn" , "caracter": "再見", "translation" :  "Au revoir!", "hint" : "de nouveau /  oeil"},
 {"pinyin":"míngtiān jiàn" , "caracter": "明天見", "translation" :  "A demain", "hint" : "se voir jour brillant"},
