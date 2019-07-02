@@ -20,4 +20,9 @@
     "jsonwebtoken": "^8.1.0",
     "validator": "^9.2.0"
   }
+  
+ "devDependencies": {
+    "babel-preset-env": "^7.4.5"
+  }
+  
 }
