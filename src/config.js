@@ -1,6 +1,6 @@
 import AWS from 'aws-sdk';
 
-var serverHost='localhost'||'0.0.0.0'; //0.0.0.0 is for heroku / localhost in dev mode
+var serverHost='melocal'||'0.0.0.0'; //0.0.0.0 is for heroku / localhost in dev mode
 
 AWS.config.update({
       accessKeyId: "AKIAI25TDQD76X2NL3QQ",
