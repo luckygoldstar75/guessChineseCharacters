@@ -10,7 +10,9 @@ import SESSIONS from './CRUD-sessions.js';
 import LEADERBOARDS from './CRUD-leaderboards.js'
 var SHA256 = require("crypto-js/sha256");
 
-const routes = [
+export const my_origin= ['http://melocal:4000', 'http://melocal:3000', 'http://localhost:3000', 'http://localhost:4000', 'https://japlcej.herokuapp.com']; // an array of origins or 'ignore'	
+
+export const routes = [
 {
 path: '/',
 method: 'GET',
@@ -92,7 +94,7 @@ handler: ( request, reply ) => { try {
 	config : {
       auth: false,
 	  cors: {
-		origin: ['http://localhost:3000'],
+		origin: my_origin,
 		//credentials : true,
 		additionalHeaders: ['cache-control', 'x-requested-with', 'accept-language', "Access-Control-Allow-Origin","Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type"]
       }
@@ -293,6 +295,88 @@ handler: ( request, reply ) => {
 	//reply('Weird hello world! ==> u need 2 check what happened here!'); //.type('text/plain');
 }
 },
+{
+path: '/scores/{gameName}',
+method: 'GET',
+config: {
+	auth: {
+			strategy: 'standard'                    
+		}, 
+	/*cors: {
+		origin: ['http://localhost:3000'],
+		credentials : true,
+		additionalHeaders: ['cache-control', 'x-requested-with', 'accept-language', "Access-Control-Allow-Origin","Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type"]
+      }     */       
+},
+handler: ( request, reply ) => {			
+		var  __sid, __email;
+		var response ={};
+		console.log('In GET /scores/' + request.params.gameName);
+		
+		if (request && request.state['authsid']) {
+			__sid = request.state['authsid'].sid;
+			console.log("email retrieved : request : " + request + " request.state['authsid']" + JSON.stringify(request.state['authsid']) + " email: " + __email);
+		}
+		
+		function failClean() {
+				return reply({
+				level: ERROR,
+				message: 'technical error : scores could not be retrieved'
+			}).code(500);					
+		}
+		
+		try {
+			 var __sid=request.state['authsid'].sid;
+			 request.server.app.cacheSession.get(__sid, (err, value, cached, log) => {
+				  if(err || value == null || value.email == null) {
+					  console.error("could not get session sid in cache: " + err );
+					  failClean();
+					}
+				  else {										  
+					  __email = value.email;
+					  if (__email != null) {
+						  console.log("just before SCORES.retrieve");		
+						  try {
+							SCORES.retrieve(__email, request.params.gameName, processScoresResult);
+						  }
+						  catch (ex)  {
+							console.error("getting scores error for user : ", __email , " and game ", request.gameName, " ", ex.message);
+							return reply({
+								level: ERROR,
+								message: 'server-side error'
+							}).code(500);
+						  }
+					}
+					else {
+					  return reply().code(204); // no content
+					}							  
+				 }
+			 });
+			 
+			 function processScoresResult(err, _scores) {
+					console.debug("_scores: " + _scores);
+					if (_scores !== undefined && _scores !== null && _scores.error === undefined 
+							&& _scores.percentageDone !== undefined && _scores.percentageGood !== undefined) {
+							response.percentageDone = _scores.percentageDone;
+							response.percentageGood = _scores.percentageGood;							
+					}
+					
+					if (err !== undefined && err !== null) {
+						console.warn("error : " + err + err.stack);
+						console.warn("Could not retrieve scores: aws call returned object undefined");
+						console.warn("response:" + response);
+						response.error="technical error : scores could not be retrieved";
+						console.warn("response:" + response);
+					}
+					
+				  };	
+		}
+		catch (ex)  {						  
+				  console.error("Exception triggered when attempting to retrieve game scores for user : ", __email , " and game ", request.gameName, " ", ex.message);
+				  failClean();
+		}
+		
+}}
 ,
 {
 path: '/rank',
@@ -301,11 +385,11 @@ config: {
 	auth: {
 			strategy: 'standard'                    
 		}, 
-	cors: {
+	/*cors: {
 		origin: ['http://localhost:3000'],
 		credentials : true,
 		additionalHeaders: ['cache-control', 'x-requested-with', 'accept-language', "Access-Control-Allow-Origin","Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type"]
-      }            
+      }     */       
 },
 handler: ( request, reply ) => {			
 		var  __sid, __email;
@@ -379,5 +463,3 @@ handler: ( request, reply ) => {
 		}	
 }}
 ];
-
-export default routes;

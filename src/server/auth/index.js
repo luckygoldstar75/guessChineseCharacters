@@ -66,23 +66,23 @@ function loadAuthRoutes()
         config: {
             auth: {
                     strategy: 'standard'                    
-                },
+                }/*,
             cors: {
 				origin: ['http://localhost:3000'],
 				credentials : true,
 				additionalHeaders: ['cache-control', 'x-requested-with', 'accept-language', "Access-Control-Allow-Origin","Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type"]
-		   }            
+		   }        */    
 		},
         handler: function(request, reply) {
 			try {
 				console.debug("REQUEST AUTH: " + JSON.stringify(request.auth));
 				request.server.app.cacheSession.drop(request.state['authsid'].sid);
                 request.cookieAuth.clear();
-                return reply('Logout Successful!').code(200);
+                return reply({message : 'Logout Successful!'}).code(200);
 			}
 			catch(ex) {
 				console.error("Exception triggered when attempting to logout : ", ex.message);
-				return reply('Logout Failure!').code(500);
+				return reply({message : 'Logout Failure!'}).code(500);
 			}
        }
     });
@@ -93,12 +93,12 @@ function loadAuthRoutes()
            path: '/login',
            method: ['GET', 'POST'],
            config : {
-		    auth : false,
+		    auth : false /*,
 			cors: {
 				origin: ['http://localhost:3000'],
 				credentials : true,
 				additionalHeaders: ['cache-control', 'x-requested-with', 'accept-language', "Access-Control-Allow-Origin","Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type"]
-		   }},
+		   }*/},
            handler: async ( request, reply ) => {
 			if (request.method === 'get') { // TODO FIX : not working
 				var isLoggedIn = false;
@@ -132,7 +132,7 @@ function loadAuthRoutes()
 
 					if(escapedInputEmail == null || !validator.isEmail(escapedInputEmail)) {
 						_log.logging(console,request,"INVALID EMAIL : escaped email : " + escapedInputEmail);
-						return reply('Input is not a valid email. Attempt has been reported!').code(200);
+						return reply({errMessage : 'Input is not a valid email. Attempt has been reported!'}).code(200);
 					}
 
 					//EMAIL VALIDATED: legt's check mdp in db
