@@ -337,7 +337,9 @@ handler: ( request, reply ) => {
 					  if (__email != null) {
 						  console.log("just before SCORES.retrieve");		
 						  try {
-							SCORES.retrieve(__email, request.params.gameName, processScoresResult);
+							return reply({percentageDone : 30,
+      percentageGood:70, level: "1:novice"}).code(200);
+							//SCORES.retrieve(__email, request.params.gameName, processScoresResult);
 						  }
 						  catch (ex)  {
 							console.error("getting scores error for user : ", __email , " and game ", request.gameName, " ", ex.message);
