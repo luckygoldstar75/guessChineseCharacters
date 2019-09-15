@@ -5,9 +5,10 @@ import _myConfig from './config';
 import validator from 'validator';
 import _log from './loggingTools';
 import inert from 'inert';
-import CHINESE_CHARACTERS_JSON from './chineseCaracters.js';
+import GAMES from './games.js';
 import SESSIONS from './CRUD-sessions.js';
-import LEADERBOARDS from './CRUD-leaderboards.js'
+import LEADERBOARDS from './CRUD-leaderboards.js';
+import PLAYER_RESULTS from './CRUD-playerResults.js';
 var SHA256 = require("crypto-js/sha256");
 
 export const my_origin= ['http://melocal:4000', 'http://melocal:3000', 'http://localhost:3000', 'http://localhost:4000', 'https://japlcej.herokuapp.com']; // an array of origins or 'ignore'	
@@ -89,7 +90,7 @@ handler: ( request, reply ) => { try {
 }
 },
 {
-	path: '/guessCharacter/{level?}',
+	path: '/guess/{gameName}/{level?}',
 	method: 'GET',
 	config : {
       auth: false,
@@ -100,27 +101,42 @@ handler: ( request, reply ) => { try {
       }
     },            
 	handler: ( request, reply ) => { try {	
-			   console.log("new call to: " + request.method + " " + request.path  + "/{level} with level " + request.params.level +
+			   console.log("new call to: " + request.method + " " + request.path  +
+						   "/{gameName} with gameName " + request.params.gameName +
+						   "/{level?} with level " + request.params.level +
 						" with params " + ((request.params === null)? undefined: JSON.stringify(request.params)) +
 						" and payload " + ((request.payload === null)? undefined: JSON.stringify(request.payload)));
 			
 				 var _level=null;
-				 
+				 var _gameName=null;
+
 				 console.log("Request Params: ", request.params);
 				 console.log("Request Params: level", request.params.level);
 				 
 				 if (request.params  && request.params.level && typeof request.params.level ==="number" )  {
-					console.log("raw level from URL: ", level);
+					console.log("raw level from URL: ", request.params.level);
 					_level=encodeURIComponent(request.params.level);
 					console.log("level computed from url: ", _level);
 				 }
-				 var myCar = CHINESE_CHARACTERS_JSON.getNextRandomCharacter(_level);
+				 if (request.params  && request.params.gameName && typeof request.params.gameName ==="string" )  {
+					console.log("raw gameName from URL: ", request.params.gameName);
+					_gameName=encodeURIComponent(request.params.gameName);
+					console.log("gameName computed from url: ", _gameName);
+				 }
+				 
+				 var question = GAMES.getNextQuestion(_gameName, _level);
+
 				 var myUniqueGuessId=_myConfig.guid();
 				 console.log("myUniqueGuessId: ", myUniqueGuessId);
 				 // TODO : see if needed to obfuscate characters so as to not get them stolen : myCar.pinyin="forYouToGuess";
-				 var guessItem = { "id": myUniqueGuessId ,"character" : myCar,
+				 var returnGuessItem = { "id": myUniqueGuessId ,
+					"type" : question.question.type, "value" : question.question.value,
+						"game" : question.game, "level" : question.level,
 										  "timestamp" : Date.now()};
-				 var stringGuessItem = JSON.stringify(guessItem);
+				 console.log("returnGuessItem" + returnGuessItem);
+				 var stringGuessItem = JSON.stringify(returnGuessItem);
+				 var guessItem = returnGuessItem;
+				 guessItem.expectedAnswer = question.expectedAnswer;
 				_myConfig.server.tableOfCurrentGuess[myUniqueGuessId]=guessItem;
 				return reply(stringGuessItem).code(200);
 		} catch (ex)  {
@@ -131,49 +147,62 @@ handler: ( request, reply ) => { try {
 
 },
 {
-	path: '/guessCharacter', 
+	path: '/guess/{id}', 
 	method: 'POST',
 	config: {
-		auth: false 
+		auth: {
+			strategy: 'standard'                    
+		},  
 	},  //TODO : how to fo it for simple visitors / no account?
 	handler: async ( request, reply ) => { try {
 			   console.log("new call POST to: " + request.method + " " + request.path  +
 						" with params " + ((request.params === null)? undefined: JSON.stringify(request.params)) +
 						" and payload " + ((request.payload === null)? undefined: JSON.stringify(request.payload)));
-				 var {id, userInputPinyin}=request.payload;
+				 var answer =request.payload;
+				 var _id = null;	
 				 
-				 if(_myConfig.server.tableOfCurrentGuess[id] === null || _myConfig.server.tableOfCurrentGuess[id] === undefined) {
+				  if (request.params  && request.params.id && typeof request.params.id ==="string" )  {
+					//console.log("raw id from URL: ", request.params.id);
+					_id=encodeURIComponent(request.params.id);
+					//console.log("id computed from url: ", _id);
+				 }
+				 
+				 if(_myConfig.server.tableOfCurrentGuess[_id] === null || _myConfig.server.tableOfCurrentGuess[_id] === undefined) {
 					 console.log("_myConfig.server.tableOfCurrentGuess[id]: " + JSON.stringify(_myConfig.server.tableOfCurrentGuess));
 					 return reply({
 							error: true,
-							errMessage: "guess : id " + id + " not found"
+							errMessage: "guess : id " + _id + " not found"
 					});
 				}
 				 
 				 var isGood = false;
-				 var charTobeGuessed = _myConfig.server.tableOfCurrentGuess[id];  //object set in GET guessCharacter
+				 var guessItem = _myConfig.server.tableOfCurrentGuess[_id];  //object set in GET guessCharacter
 				 console.log(JSON.stringify( _myConfig.server.tableOfCurrentGuess));
-				 console.log("charTobeGuessed:" +  JSON.stringify(charTobeGuessed));
+				 console.log("guessItem:" +  JSON.stringify(guessItem));
 
-				delete _myConfig.server.tableOfCurrentGuess[id]; // the guess is now to be erased : it has been tested for guess once
+				delete _myConfig.server.tableOfCurrentGuess[_id]; // the guess is now to be erased : it has been tested for guess once
 		
-				if (charTobeGuessed.character.pinyin.toLowerCase() === validator.escape(userInputPinyin).toLowerCase() ) {
+				if (guessItem.expectedAnswer.type === answer.type &&
+					guessItem.expectedAnswer.value.toLowerCase() === validator.escape(answer.value).toLowerCase()
+				) {
 				   isGood = true;
 				 }
 				else {
-				  console.log("Wrong inputCharacter, user made a mistake " +
-								  charTobeGuessed.caracter + " is in pinyin: " + charTobeGuessed.pinyin + " VS user input pinyin:" + userInputPinyin );
+				  console.log("Wrong answer, user made a mistake : question was : " + guessItem.expectedAnswer + " VS user answer:" + answer );
 				}
 
-				var response = {"id": id,
+				var response = {"id": _id,
 								   "isGood" : isGood,
-								   "answer" : charTobeGuessed.character.pinyin};
+								   "answer" : guessItem.expectedAnswer};
 
 				// try to update session with score
-				try {
-				  var __sid=request.state['authsid'].sid;
-				  var __email=null;    
-				  request.server.app.cacheSession.get(__sid, (err, value, cached, log) => {
+				try {				  
+				  var __sid=null;
+				  console.log("request.state['authsid'] "+ request.state['authsid']);
+				  if(request.state['authsid'] !== null && request.state['authsid'] !== undefined) {
+					__sid=request.state['authsid'].sid;
+					var __email=null;    
+					 request.server.app.cacheSession.get(__sid, (err, value, cached, log) => {
 							  if(err) {
 								  console.error("could not get session sid in cache: " + err )
 								}
@@ -181,9 +210,11 @@ handler: ( request, reply ) => { try {
 								  __email=value.email;
 								  console.log("Success: get session sid in cache: " + __email);
 								  SESSIONS.updateScore(__sid, __email, isGood, console, getResult);
+								  PLAYER_RESULTS.add(__email, guessItem.game, guessItem.level, guessItem.type, guessItem.value,
+													 answer,isGood,Date.now());
 								  }
 						  });
-				  
+				  }
 				  function printData(data, depth) {
 					    if (depth === 0)
 							return data;
@@ -198,7 +229,7 @@ handler: ( request, reply ) => { try {
 				  
 				  console.debug("__sid: " + __sid);
 				  //console.debug("request.server.app.cacheSession: " + printData(request.server.app.cacheSession, 2) + " request.server.app.cacheSession.get(__sid): " + request.server.app.cacheSession.get(__sid));
-				  console.debug("after print session");
+				  //console.debug("after print session");
 				  
 				  function getResult(err, _scoresUpdated) {
 					console.debug("_scoresUpdated: " + _scoresUpdated);
@@ -227,7 +258,7 @@ handler: ( request, reply ) => { try {
 				finally {
 					console.debug("here am i: " + response);
 					for (var key in response) {
-						console.debug("key:" + key + " value" + response[key]) ;
+						console.debug("key:" + key + " value:" + response[key]) ;
 					}
 					
 				  return reply(response).code(200);
@@ -461,6 +492,85 @@ handler: ( request, reply ) => {
 				myRankingObject.nbPoints = rankingObject.nbPoints;
 								
 			 return reply(myRankingObject).code(200);
+			}
+		}	
+}},
+{
+path: '/playerResults/{gameName}/{level?}',
+method: 'GET',
+config: {
+	auth: {
+			strategy: 'standard'                    
+		}, 
+	/*cors: {
+		origin: ['http://localhost:3000'],
+		credentials : true,
+		additionalHeaders: ['cache-control', 'x-requested-with', 'accept-language', "Access-Control-Allow-Origin","Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type"]
+      }     */       
+},
+handler: ( request, reply ) => {			
+		var  __sid, __game, __level;
+		var response ={};
+			__game = request.params.gameName;
+			__level=request.params.level;
+		console.log('In GET /playerResults/'+ __game + "/" + __level);	
+		
+		if (request && request.state['authsid']) {
+			__sid = request.state['authsid'].sid;
+			console.log("email retrieved : request : " + request +
+						" request.state['authsid']" + JSON.stringify(request.state['authsid']));
+		}
+		
+		function failClean() {
+				return reply({
+				level: ERROR,
+				message: 'technical error : rank could not be retrieved'
+			}).code(500);					
+		}
+		
+		try {
+			 var __sid=request.state['authsid'].sid;
+			 request.server.app.cacheSession.get(__sid, (err, value, cached, log) => {
+				  if(err || value == null || value.email == null) {
+					  console.error("could not get session sid in cache: " + err );
+					  failClean();
+					}
+				  else {										  
+					  var __email = value.email;
+					  if (__email != null) {
+						  console.log("just before PLAYERRESULTS.retrieve with email: " +__email);		
+						  try {
+							PLAYER_RESULTS.retrieveUserResultsForGameAndLevel(__email, __game, __level, getPlayerResults);
+						  }
+						  catch (ex)  {
+							console.error("getting player results error : ", ex.message);
+							return reply({
+								level: ERROR,
+								message: 'server-side error'
+							}).code(500);
+						  }
+					}
+					else {
+					  return reply().code(204); // no content
+					}							  
+				 }
+			 });
+		}
+		catch (ex)  {						  
+				  console.error("Exception triggered when attempting to retrieve email from cookie sid", ex.message);
+				  failClean();
+		}
+		
+		function getPlayerResults(err, playerResultsObject) {
+			if (playerResultsObject == null) {
+				return reply().code(204); // no content
+			}
+			else if (err) {
+			  console.log(err);
+			  failClean();	
+			}
+			else {			 		
+			 return reply(playerResultsObject).code(200);
 			}
 		}	
 }}

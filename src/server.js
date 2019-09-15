@@ -10,7 +10,7 @@ server.connection({ port: process.env.PORT || _myConfig.server.port ,
 		origin: my_origin, // an array of origins or 'ignore'	
             headers: ['Accept', 'Authorization', 'Content-Type', 'If-None-Match','Accept-language'], // an array of strings - 'Access-Control-Allow-Headers' 	
             exposedHeaders: ['Accept','WWW-Authenticate', 'Server-Authorization'], // an array of exposed headers - 'Access-Control-Expose-Headers',	
-	    //methods: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS'],	
+						//methods: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS'],	
             additionalExposedHeaders: ['Accept'], // an array of additional exposed headers	
             maxAge: 60,	
             credentials: true // boolean - 'Access-Control-Allow-Credentials'	

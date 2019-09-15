@@ -12,7 +12,7 @@ const LEADERBOARDS =
                       console.debug("email: " + __email);
 
                       if( __email==undefined) {
-                         callback("RANKING NOT FOUND ", null);
+                         callback("RANKING NOT FOUND :email undefined ", null);
                          return;
                       }
 

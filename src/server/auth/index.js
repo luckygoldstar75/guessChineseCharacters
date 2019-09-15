@@ -25,6 +25,7 @@ exports.register = function(server, options, next) {
         server.auth.strategy('standard', 'cookie', {
             password: 'somecrazycookiesecretthatcantbeguesseswouldgohere', // cookie secret
             cookie: 'authsid', // Cookie name
+            isSameSite : 'Lax',
             isSecure: false, // required for non-https applications
             ttl: _myConfig.server.cookieExpirationTimeMs,
             validateFunc: function (request, session, callback) {
