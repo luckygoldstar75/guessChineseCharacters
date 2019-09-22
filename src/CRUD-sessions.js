@@ -6,57 +6,8 @@ import _log from './loggingTools';
 const SESSIONS =
 {
   __tableName : "my_sessions",
-  updateScore : function (__token, __email, isGood, console, callback ) {
-                      var ddb = new AWS.DynamoDB();
-                      var targetCounter = ((isGood === true) ? "nbGood" : "nbFalse");
-                      console.debug("targetCounter :", targetCounter );
-
-                      console.debug("email: " + __email);
-
-                      console.debug("TOKEN: " + __token);
-
-                      if(__token === undefined || __email===undefined) {
-                         callback("SESSION NOT FOUND ", null);
-                         return;
-                      }
-
-                      var params = {
-                          TableName: this.__tableName,
-                          Key: {"email" : {S: __email},
-							  "token" : {S: __token}
-                          //"timestamp" : {N: "1517527485777"}
-                          },
-                          ExpressionAttributeNames : {
-                            "#counter": targetCounter,
-                            "#token" : "token"
-                          },
-                          ExpressionAttributeValues : {
-                            ":ONE": {N : "1" },
-                            ":token": {S : __token },
-                          },
-                          UpdateExpression: "add #counter :ONE",
-                          ConditionExpression: "#token= :token",
-                          ReturnValues : "ALL_NEW"
-                        };
-                    
-                    var _reply= undefined;    
-                    ddb.updateItem(params, async function(err, data) { //WARN : TODO : GET ONLY the MAX timestamp session for user
-                      if (err) {
-                        console.log(err + ': Unable to update item ' + err.stack);
-                        callback("unable to update item in repository ", null);
-                      } else {
-                        var nbGood=data.Attributes.nbGood.N;
-                        var nbFalse=data.Attributes.nbFalse.N;
-
-                        console.debug("data " + JSON.stringify(data));
-                        //console.debug("nbGood, nbFalse " + " " + nbGood + " " + nbFalse);
-                        _reply = {'nbGood': nbGood, 'nbFalse' : nbFalse};
-                        console.log("_reply " + JSON.stringify(_reply));
-                        callback(null, _reply)                        
-                      }
-                    });
-  },
-retrieveLastSession : function (console, escapedInputEmail, callback) {
+ 
+	retrieveLastSession : function (console, escapedInputEmail, callback) {
   var ddb = new AWS.DynamoDB();
   var params = {
             TableName: this.__tableName,
@@ -82,11 +33,9 @@ retrieveLastSession : function (console, escapedInputEmail, callback) {
 			 console.debug("data: " + JSON.stringify(data));
 			 
 			 _reply = {
-            'token' : data.Items[0].token.S,
+            'sessionId' : data.Items[0].sessionId.S,
             'email': escapedInputEmail,
-            'timestamp' : data.Items[0].timestamp.N,
-            'nbGood' : data.Items[0].nbGood.N,
-            'nbFalse' : data.Items[0].nbFalse.N,
+            'timestamp' : data.Items[0].timestamp.S
             //add expiration?
             };
           
@@ -95,20 +44,16 @@ retrieveLastSession : function (console, escapedInputEmail, callback) {
          }
   });
   },
-create : function(escapedInputEmail, token, nbGood, nbFalse, callback)  {
+create : function(escapedInputEmail, sessionId, callback)  {
   // TODO : shield input + try catch around + API contract : undefined vs value
            //sessions
-if (nbGood === undefined) {nbGood = "0"};           
-if (nbFalse === undefined) {nbFalse = "0"};
 
 var ddb = new AWS.DynamoDB();
            var paramsStoreNewSession = {
               TableName: this.__tableName,	
               "Item" : {"email" : {"S" : escapedInputEmail},
-                "token" : {"S" : token},
-                "nbGood" : {"N" : nbGood},
-                "nbFalse" : {"N" : nbFalse},
-                "timestamp" : { "N" : (Date.now()).toString()}
+                "sessionId" : {"S" : sessionId},
+                "timestamp" : { "S" : (Date.now()).toString()}
               }
             };
 
@@ -117,7 +62,7 @@ ddb.putItem(paramsStoreNewSession, function(err, data) { //WARN : TODO : GET ONL
               console.log(err + ' Unable to put new session item');
               callback(err);
             } else {
-              console.log('put new session with token:' + token +  " :Success");
+              console.log('put new session with sessionId:' + sessionId +  " :Success");
               callback(null);
             }
             });

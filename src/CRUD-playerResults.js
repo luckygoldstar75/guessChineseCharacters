@@ -12,6 +12,7 @@ const PLAYER_RESULTS =
 {
     levels : _levels,
   __tableName : "results_byPlayerAndTimestamp",
+  
   retrieveUserResultsForGameAndLevel : function ( __email, __gameName, __level, callback ) {
                       var ddb = new AWS.DynamoDB();
                       
@@ -24,11 +25,11 @@ const PLAYER_RESULTS =
 
                       var params = {
                           TableName: this.__tableName,
-                          "ExpressionAttributeNames": {"#level" : "level"},
+                          "ExpressionAttributeNames": {"#level" : "gameLevel"},
                           "ExpressionAttributeValues": {":email" : {"S" : __email} , ":gameName" : {"S" : __gameName},
                           ":level" : {"S" : __level}},
 						  "KeyConditionExpression": "email = :email ",
-                          "FilterExpression" : "#level = :level AND gameName = :gameName ",
+                          "FilterExpression" : "#level = :level AND gameName = :gameName",
 						  "Limit": this.levels[__level],
 						  ScanIndexForward: false
                           };
@@ -71,27 +72,55 @@ const PLAYER_RESULTS =
                         //var nbPoints=data.Items[0].nbPoints.N;
                         //var rank=data.Items[0].rank.N;
                     var nbTries = data.Count;
-                    var numGood = data.Items.reduce(function (n, item) {
+                    var nbGood = data.Items.reduce(function (n, item) {
                                     return n + (item.isGood.BOOL === true);
-                    }, 0);
-                    var percentageGood = Math.round(numGood / nbTries * 100);
+                    }, 0);                    
+                    var percentageGood = Math.round(nbGood / nbTries * 100);
                     var percentageTries = Math.round(nbTries / PLAYER_RESULTS.levels[__level] *100);
                     
                      console.debug("data " + JSON.stringify(data));
-                     _reply = {'percentageGood': percentageGood,
+                     _reply = {'nbGood': nbGood,
+                               'nbFalse': nbTries - nbGood,
+                               'nbTries': nbTries,
+                              'percentageGood': percentageGood,
                                'percentageTries' : percentageTries,
-                               'level' : data.Items[0].level.S
+                               'minimumNbTriesForLevel' : PLAYER_RESULTS.levels[__level],
+                               'level' : __level,
                      };
                      console.log("_reply " + JSON.stringify(_reply));
                      callback(null, _reply);                        
                       }
                     });
   },
-  add : function(__email, guessItem, __answer, isGood, timestamp ) {
-    /*/*__email, guessItem.game, guessItem.level, guessItem.type, guessItem.value,
-													 answer,isGood,Date.now());*/
-                                                     
-      return null; //dummy implementation                                               
+  add : function(__email, __sessionId,  __gameName, __gameLevel, __questionType, __questionValue, __answerType, __answerValue,
+                 __isGood, __timestamp, callback ) {    
+    
+   var ddb = new AWS.DynamoDB();
+           var paramsStoreNewPlayerResult = {
+              TableName: this.__tableName,	
+              "Item" : {"email" : {"S" : __email},
+                "sessionId" : {"S" : __sessionId},
+                "gameName" : {"S" : __gameName},
+                "gameLevel" : {"S" : __gameLevel||Object.keys(_levels)[0]},
+                "questionType" : {"S" : __questionType},
+                "questionValue" : {"S" : __questionValue},
+                "answerType" : {"S" : __answerType},
+                "answerValue" : {"S" : __answerValue},
+                "isGood" : {"BOOL" : __isGood},
+                "timestamp" : { "S" : __timestamp.toString()}
+              }
+            };
+console.log("addPlayerResult paramater AWS DynamoDb object:");
+console.log(paramsStoreNewPlayerResult);
+ddb.putItem(paramsStoreNewPlayerResult, function(err, data) { //WARN : TODO : GET ONLY the MAX timestamp session for user
+            if (err) {
+              console.log(err + ' Unable to put new player result item');
+              callback(err);
+            } else {
+              console.log('put new player result with sessionId:' + __sessionId +  " :Success");
+              callback(null);
+            }
+            });                                             
   }
 };
 export default PLAYER_RESULTS;

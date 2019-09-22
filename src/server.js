@@ -1,5 +1,7 @@
 import Hapi from 'hapi';
-import {my_origin, routes} from './routes';
+import Handlebars from 'handlebars';
+
+import {routes} from './routes';
 import _myConfig from './config';
 
 const server = new Hapi.Server();
@@ -7,7 +9,7 @@ const server = new Hapi.Server();
 server.connection({ port: process.env.PORT || _myConfig.server.port , 
 	host: _myConfig.server.host,
 	routes : {cors: {	
-		origin: my_origin, // an array of origins or 'ignore'	
+		origin: _myConfig.my_origin, // an array of origins or 'ignore'	
             headers: ['Accept', 'Authorization', 'Content-Type', 'If-None-Match','Accept-language'], // an array of strings - 'Access-Control-Allow-Headers' 	
             exposedHeaders: ['Accept','WWW-Authenticate', 'Server-Authorization'], // an array of exposed headers - 'Access-Control-Expose-Headers',	
 						//methods: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS'],	
@@ -20,7 +22,7 @@ server.connection({ port: process.env.PORT || _myConfig.server.port ,
 module.exports = server;
 
 
-server.register([require('inert'), require('./server/auth/index.js')],
+server.register([require('inert'), require('./server/auth/index.js')], //, require('@hapi/vision') FAILS!!!!????
   function(err) {	  
 	  if( err ) {
 			// Fancy error handling here
@@ -31,15 +33,34 @@ server.register([require('inert'), require('./server/auth/index.js')],
 	  
     //Start the server
     console.log("attempt to start the server");
-
+		console.log(routes);
+		
 	routes.forEach( ( route ) => {
         console.log( `attaching ${ route.path }` );
         server.route( route );
 	});
 
+		liftOff;
+	
     server.start( (err) => {
 		//Log to the console the host and port info
         console.log('Server started at: ' + server.info.uri);
     });
 });
 
+async function liftOff() {  
+ /* await server.register({
+    plugin: require('vision')  // add template rendering support in hapi
+  })*/
+
+  // configure template support   
+  server.views({
+    engines: {
+      html: Handlebars
+    },
+    path: __dirname + '/views',
+    layout: 'layout'
+  })
+}
+
+ 

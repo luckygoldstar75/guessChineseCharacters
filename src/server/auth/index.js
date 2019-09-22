@@ -184,45 +184,42 @@ function loadAuthRoutes()
 							  }});
 						  
 						// Get last Session for scores display (OPTIONAL / FALLBACK possible without updated scores)
-		                var nbGood , nbFalse, userLastSession;
+		                var userLastSession;
 		
-		                try {							
-							function getResult(err, myLastSession) {
+		                try {
+                      SESSIONS.retrieveLastSession(console, escapedInputEmail, afterRetrieveLastSession);    
+                        
+							function afterRetrieveLastSession(err, myLastSession) {
 		                          if (err !== undefined && err !== null) {
 		                          console.error("error : " + err + err.stack);
 		                          }
 		                          else {
 		                          console.log("lastSession retrieved: ", myLastSession);
-		                          if (myLastSession !== undefined && myLastSession.nbFalse !== undefined && myLastSession.nbGood !== undefined) {
-									  nbGood = myLastSession.nbGood;
-									  nbFalse = myLastSession.nbFalse;
-									  userLastSession = myLastSession.timestamp;
-									  
+		                          if (myLastSession !== undefined) {
+                                       userLastSession = myLastSession.timestamp;									  
 		                          }
 		                          else {
-		                            console.warn("Could not retrieve scores from last session: last session undefined");
+		                            console.warn("Could not retrieve last session: last session undefined");
 		                           }
 		                          }
 		                          
-		                        storeNewSession(escapedInputEmail,sid , nbGood , nbFalse);  	
+		                        storeNewSession(escapedInputEmail,sid);  	
 		                    }	
 							
-							SESSIONS.retrieveLastSession(console, escapedInputEmail, getResult);    
+							  
 		                 }
 		                 catch (ex)  {
 		                          console.error("Exception triggered when attempting to store update score : ", ex.message);
 		                 }
                 
-					function storeNewSession(_escapedInputEmail,_sid , _nbGood , _nbFalse) {  	
+					function storeNewSession(_escapedInputEmail,_sid) {  	
 						//STORE NEW SESSION TO DB (NOT ESSENTIAL : can play on memory but scores not updated in DB)
 					 try {
-					   console.log("_escapedInputEmail, _token, _nbGood, _nbFalse: " + _escapedInputEmail +"," + _sid + "," + _nbGood + "," + _nbFalse);
+					   console.log("_escapedInputEmail, __sessionId" + _escapedInputEmail +"," + _sid);
 					   var response = {
                             'sid' : _sid,
                             'scope': _escapedInputEmail,
-                            'nbGood': _nbGood,
-                            'nbFalse' : _nbFalse,
-                            'lastSession' : userLastSession,
+                            'lastSession' : userLastSession ,
                             'avatarUrl' : data.Item.avatarUrl.S,
                             'pseudo' : data.Item.pseudo.S
                           };
@@ -235,12 +232,12 @@ function loadAuthRoutes()
 					   return reply(response);							
 					  }	
 					
-					SESSIONS.create(_escapedInputEmail, _sid, _nbGood, _nbFalse, _afterCreate);                  
+					SESSIONS.create(_escapedInputEmail, _sid, _afterCreate);                  
 					}
 					catch (ex)  {
                       console.error("Exception triggered when attempting to store new session", ex.message);
                       return reply({
-                            level: WARN,
+                            level: 'WARN',
                             message: "session was memory stored but could not be saved in db"
                         });
 					}
@@ -250,7 +247,7 @@ function loadAuthRoutes()
 		  catch (ex)  {
               console.error("login error : ", ex.message);
               return reply({
-                        level: ERROR,
+                        level: 'ERROR',
                         message: 'server-side error'
 				});
 		  }

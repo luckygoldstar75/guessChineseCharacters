@@ -6,7 +6,7 @@ import _log from './loggingTools';
 const SCORES =
 {
   __tableName : "scores",
-  retrieveUserScoresForGameAndLevel : function ( __email, callback ) {
+  retrieveUserScoresForGameAndLevelPreviousSessions : function ( __email, callback ) {
                       var ddb = new AWS.DynamoDB();
                       
                       console.debug("email: " + __email + " game: " + __game + " level: " : __level);

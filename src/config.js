@@ -1,13 +1,12 @@
 import AWS from 'aws-sdk';
+import {awsConfig} from './awsConfig-private.js';
 
 var serverHost='melocal'||'0.0.0.0'; //0.0.0.0 is for heroku / localhost in dev mode
 
-AWS.config.update({
-      accessKeyId: "AKIAI25TDQD76X2NL3QQ",
-      secretAccessKey: "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",
-      region: "us-east-1",
-      httpOptions: {timeout: 500}
-  });
+export const my_origin= ['http://melocal:4000', 'http://melocal:3000', 'http://localhost:3000', 'http://localhost:4000', 'https://japlcej.herokuapp.com']; // an array of origins or 'ignore'	
+
+
+AWS.config.update(awsConfig);
 
 const _myConfig = {
  "server" :  {  
