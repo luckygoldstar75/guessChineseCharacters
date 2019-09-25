@@ -14,7 +14,7 @@ const MY_PLAYERS =
 doesPlayerExistByEmail : async function (console, escapedInputEmail) {
   var ddb = new AWS.DynamoDB();
   var params = {
-            TableName: this.__tableName,
+            TableName: MY_PLAYERS.__tableName,
             "ExpressionAttributeValues": {":escapedEmail" : {"S" : escapedInputEmail} },
             "KeyConditionExpression": "email = :escapedEmail",
             "Limit": 1,
@@ -65,8 +65,37 @@ ddb.putItem(paramsStoreNewPlayer, function(err, data) {
             }
             });
 },
-
-sendEmailForSignupConfirmation : async function (console, sourceEmail, escapedInputEmail, link) {
+renewSignupConfirmationLink : async function (_escapedInputEmail,  _linkExpiracyTimestamp) {
+  var nowtmstmp = Date.now().toString();
+  var ddb = new AWS.DynamoDB.DocumentClient();
+  var params = {
+            TableName: MY_PLAYERS.__tableName,
+            "ExpressionAttributeValues":
+            { ":_link" : _link,
+              ":_linkExpiracyTimestamp" : _linkExpiracyTimestamp,
+              ":_true" : true,
+            },
+            "Key": {"email" : _escapedInputEmail},
+            "UpdateExpression" : "set link = :_link , linkExpiracyTimestamp = :_linkExpiracyTimestamp",
+            "ConditionExpression": "signupConfirmationNeeded = :_true",
+            "ReturnValues" : "UPDATED_NEW", 
+            "ScanIndexForward": false 
+          };
+     
+ return await ddb.update(params).promise().then( data => {
+   if (data === undefined || data.Attributes === undefined || 
+			Object.keys(data.Attributes).length<1 ) {
+            console.log('no row updated for email signup link renewal request ' + _escapedInputEmail);
+            return new Promise((resolve, reject) => { resolve(false);});
+         }
+         else {
+          console.log('signup confirmation link renewed for player with email ' + _escapedInputEmail);
+           return new Promise((resolve, reject) => {resolve(true);});
+         }
+  }).catch(err => {console.error(err + ' Unable to renew signup confirmation link ' + err + err.stack);
+           return new Promise((resolve, reject) => {reject(err);})});
+ }
+, sendEmailForSignupConfirmation : async function (console, sourceEmail, escapedInputEmail, link) {
   var ses = new AWS.SES();
   var body = 'Bonjour et bienvenue 你好,\n Voici le lien de confirmation que vous avez demandé: ' +
   link + '\n\nVotre inscription sera validée lorsque vous aurez confirmé en suivant le lien. Le lien est valable 2 heures \n.'
@@ -92,10 +121,11 @@ sendEmailForSignupConfirmation : async function (console, sourceEmail, escapedIn
 },
 
 validateLink : async function (_receivedLink, _validEmail) {
-  var nowtmstmp = Date.now().toString();
+  var nowtmstmp = parseInt(Date.now().toString(), 10);
+  console.log("nowtmstmp", nowtmstmp);
   var ddb = new AWS.DynamoDB.DocumentClient();
   var params = {
-            TableName: this.__tableName,
+            TableName: MY_PLAYERS.__tableName,
             "ExpressionAttributeValues":
             { ":_link" : _receivedLink,
               ":_now" : nowtmstmp,
@@ -106,8 +136,8 @@ validateLink : async function (_receivedLink, _validEmail) {
             "Key": {"email" : _validEmail},
             "UpdateExpression" : "set signupConfirmationNeeded = :_false",
             "ConditionExpression": "link = :_link AND signupConfirmationNeeded = :_true AND linkExpiracyTimestamp > :_now",
-            "ReturnValues" : "UPDATED_NEW", 
-            "ScanIndexForward": false 
+            "ReturnValues" : "UPDATED_NEW",
+            "ScanIndexForward": false
           };
      
  return await ddb.update(params).promise().then( data => {
@@ -120,7 +150,7 @@ validateLink : async function (_receivedLink, _validEmail) {
           console.log('signup confirmation link found for player with email ' + _validEmail);
            return new Promise((resolve, reject) => {resolve(true);});
          }
-  }).catch(err => {console.error(err + ' Unable to retrieve singup confirmation link ' + err + err.stack);
+  }).catch(err => {console.error(err + ' Unable to retrieve signup confirmation link ' + err + err.stack);
            return new Promise((resolve, reject) => {reject(err);})});
  }
 };

@@ -6,7 +6,6 @@ import _log from './loggingTools';
 import inert from 'inert';
 import MY_PLAYERS from './CRUD-my_players.js';
 import crypto from "crypto";
-var SHA512 = require("crypto-js/sha512");
 
 const minimumPasswordSize = 8;
 const HOME_SITE_WEB_BASE_URL = "http://japprendslechinoisenjouant.com";
@@ -54,7 +53,7 @@ function passwordIsValid(pwd) {
 
 export const routes_signup = [
 {
-	path: '/signup', //TODO: not in production
+	path: '/signup', 
 	method: 'POST',
     config : {
 		    auth : false,
@@ -98,7 +97,7 @@ export const routes_signup = [
         var escapedInputPseudo = " ";
 
         console.log("before link");
-        var link=  Buffer.from(SHA512(crypto.randomBytes(512)).toString()+";"+escapedInputEmail, 'binary')
+        var link=  Buffer.from(crypto.createHash('sha512').update(crypto.randomBytes(512)).digest('hex').toString()+";"+escapedInputEmail, 'binary')
             .toString('base64');
         var linkExpiracyTimestamp = new Date().setTime(new Date().getTime() + 2*60*60*1000);
 
@@ -131,7 +130,7 @@ export const routes_signup = [
 	}}
 },
 {
-	path: '/signup/{link}', //TODO: not in production
+	path: '/signup/{link}', 
 	method: 'GET',
     config : {
       auth: false,
@@ -162,7 +161,7 @@ export const routes_signup = [
                             <title>Welcome! Your subscription is confirmed!</title>\
                             <meta http-equiv="refresh" content="3;URL='+ HOME_SITE_WEB_BASE_URL +'">\
                            </head>\
-                            <body></body></html>'
+                            <body>Congratulations, your subscription is confirmed !</body></html>'
                         ).code(200)
             }
         )
@@ -185,6 +184,52 @@ export const routes_signup = [
     }
 }
 ,
+{
+	path: '/signupReemissionRequest', 
+	method: 'POST',
+    config : {
+		    auth : false,
+    },
+	handler: async ( request, reply ) => {        
+ try {
+	const { email } = request.payload;
+	console.log("signup check request received for email: " + email );	 //todo : request.IPsource pour logguer
+	var escapedInputEmail = (validator.escape(email)).toLowerCase();
+	console.log("escaped email to be checked: " + escapedInputEmail );
+	
+ if(!validator.isEmail(escapedInputEmail)) {
+		console.log(console,request,"INVALID EMAIL : escaped email : " + escapedInputEmail);
+		return reply('Input is not a valid email.').code(422);
+	}
+	else {
+        console.log("email ok")
+        var link = Buffer.from(crypto.createHash('sha512').update(crypto.randomBytes(512)).digest('hex').toString()+";"+escapedInputEmail, 'binary')
+            .toString('base64');
+
+        console.log("New signup reemission link " + link);
+        var linkExpiracyTimestamp = new Date().setTime(new Date().getTime() + 2*60*60*1000);
+ 
+        MY_PLAYERS.renewSignupConfirmationLink(escapedInputEmail, link, linkExpiracyTimestamp)
+        .then( resolve =>  {console.log('Signup reemission link for player performed successfully');
+               // CALL AMAZON for  sending email including unique link 
+              MY_PLAYERS.sendEmailForSignupConfirmation(console, '"J\'apprends le chinois en jouant" <noreply@japprendslechinoisenjouant.fr>',
+                                                                      escapedInputEmail, getFullRequestPath(request) + '/' + link);
+              })
+        .then(resolve => {return reply({"error" : "false", "message" : 'Welcome! You shall receive in a few seconds a personal validation email with a link to folllow \
+                           for definitive confirmation of your account creation!'}).code(200)})
+        .catch(ex =>  { console.error( 'Error while attempting to send signup confirmation email for ' + escapedInputEmail + ' '+ ex);
+                    return reply({"error" : "true", "message" : "Error while attempting to send signup confirmation email. \
+                                 Verify the email you input an try again. "});
+               })              
+	}}
+ catch (ex)  {
+	  console.error("", ex.message);
+	  return reply({
+				error: true,
+				errMessage: 'server-side error'
+	  });
+	}}
+},
 {
 	path: '/validEmail', //TODO: not in production
 	method: 'POST',
