@@ -7,7 +7,11 @@ import _log from '../../loggingTools';
 // import inert from 'inert';
 import SESSIONS from '../../CRUD-sessions.js';
 var SHA256 = require("crypto-js/sha256");
-
+import crypto from "crypto";
+import MY_PLAYERS from '../../CRUD-my_players.js';
+import _commonsServerHelpers from '../../commons-serverHelpers.js';
+import _commonsLinkHelpers from '../../commons-linkHelpers.js';  
+import _commonsPasswordHelpers from '../../commons-passwordHelpers.js';  
 
 exports.register = function(server, options, next) {
     
@@ -161,8 +165,8 @@ function loadAuthRoutes()
 						console.debug("DATA: " + data );
 						var _reply= JSON.stringify(data.Item);
 						console.debug("DATA: " + data + " REPLY: " +_reply);
-						var mdpsale= data.Item["motDePasseSalé"].S;
-						var sel= data.Item.sel.S;
+						var mdpsale= data.Item["saltedPassword"].S;
+						var sel= data.Item.salt.S;
 						var saltedPasswordHash=SHA256(sel + password).toString();
 		                console.debug("mdpsale: " + mdpsale + " sel: " +sel +  " saltedPasswordHash: " + saltedPasswordHash);
 		                //console.debug(typeof(mdpsale) + " " +  typeof(saltedPasswordHash));
@@ -253,9 +257,177 @@ function loadAuthRoutes()
 		  }
 		}
 	}});
+    
+   server.route(
+   {
+        method: 'POST',
+        path: '/forgotPassword',
+        config: {
+            auth: false
+        },
+    handler: function(request, reply) {
+      try {
+         const { email } = request.payload;
+         console.log("password forgot request received for email: " + email );	 //todo : request.IPsource pour logguer
+         var escapedInputEmail = (validator.escape(email)).toLowerCase();
+         console.log("escaped email to be checked: " + escapedInputEmail );
 	
+      if(!validator.isEmail(escapedInputEmail)) {
+            console.log(console,request,"INVALID EMAIL : escaped email : " + escapedInputEmail);
+            return reply({error : true , message : 'Input is not a valid email.'}).code(422);
+      }
+      else {
+        console.log("email ok")
+        var link = Buffer.from(crypto.createHash('sha512').update(crypto.randomBytes(512)).digest('hex').toString()+";"+escapedInputEmail, 'binary')
+            .toString('base64');
 
+        console.log("New forgot password link :" + link);
+        var linkExpiracyTimestamp = parseInt(new Date().setTime(new Date().getTime() + 2*60*60*1000));
+ 
+        MY_PLAYERS.renewForgotPasswordConfirmationLink(escapedInputEmail, link, linkExpiracyTimestamp)
+        .then( resolve =>  {console.log('New Forgot password link for player stored successfully');
+               // CALL AMAZON for  sending email including unique link 
+              MY_PLAYERS.sendEmailForForgotPassword(console, '"J\'apprends le chinois en jouant" <noreply@japprendslechinoisenjouant.fr>',
+                                                                      escapedInputEmail, _commonsServerHelpers.getHostFromRequest(request) + '/forgotPassword/' + link);
+              })
+        .then(resolve => {return reply({"message" : 'Welcome! You shall receive in a few seconds a personal validation email with a link to folllow \
+                           for changing your forgotten password!'}).code(200)})
+        .catch(ex =>  { console.error( 'Error while attempting to send forgot password email for ' + escapedInputEmail + ' '+ ex);
+                    return reply({"error" : "true", "message" : "Error while attempting to send forgot password email. \
+                                 Verify the email you input an try again. "});
+               })              
+      }
+      }catch (ex)  {
+         console.error("", ex.message);
+         return reply({
+				error: true,
+				errMessage: 'server-side error'
+         });
+      }  
+    }
+});
 
+server.route(
+{
+	path: '/forgotPassword/{link}', 
+	method: 'GET',
+    config : {
+      auth: false,
+	  cors: {
+		origin: _myConfig.my_origin,
+		//credentials : true,
+		additionalHeaders: ['cache-control', 'x-requested-with', 'accept-language', "Access-Control-Allow-Origin","Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type"]
+      }
+    },
+	handler: async ( request, reply ) => {    
+    try {
+    
+    var _linkReceived = request.params.link;
+	var _escapedLink = (validator.escape(_linkReceived));
+    
+    console.log("forgot password validation link request received for link: " + _escapedLink );	 //todo : request.IPsource pour logguer
+  	
+    var myObjectLink= _commonsLinkHelpers.isLink(_escapedLink);
+    if(!myObjectLink) {
+		console.error("INVALID confirmation forgot password link: " + _escapedLink);
+		return reply({error : true, message : 'Input is not a valid confirmation link. Attempt has been reported!'});
+	}
+    
+    await MY_PLAYERS.validateForgotPasswordLink(_escapedLink, myObjectLink.email)
+        .then(resolve => {
+               var myURL = undefined;
+               if (myObjectLink && myObjectLink.email) {
+                  myURL= encodeURI(_myConfig.frontURL +'/login/resetPassword?email=' + myObjectLink.email + "&link=" + _escapedLink);
+               }
+         
+              return reply('<!doctype html><html lang="fr">\
+                           <head><meta charset="utf-8">\
+                            <title>Great! Your forgotten password request is accepted!</title>\
+                            <meta http-equiv="refresh" content="3;URL='+ myURL + '"' + '>\
+                           </head>\
+                            <body><h1>Hey there!</h1> \
+                                  Wait a second, we take you to reset your passwords ... </body></html>'
+                        ).code(200)
+            }
+        )
+   
+        
+        .catch(ex =>  {
+                console.error( 'Error while attempting to confirm forgot password email for ' + myObjectLink.email
+                              + ' link part:' + myObjectLink.link   + ' '+ ex);
+                return reply({error : true, message : 'The forgotten password link you provided is not valid. Ask for a new one to reset your password\
+                             '}).code(422);
+        })            
+    }
+    catch (ex)  {
+	  console.error("", ex.message);
+	  return reply({
+				error: true,
+				errMessage: 'server-side error'
+        }).code(500);
+	}        
+    }
+});
+
+server.route(
+{
+	path: '/resetPassword',
+	method: 'POST',
+    config : {
+		    auth : false,
+    },
+	handler: async ( request, reply ) => {        
+ try {
+	const { email, password, link } = request.payload;
+	console.log("password reset order received for email: " + email + " link: " + link);	 //todo : request.IPsource pour logguer
+	var escapedInputEmail = email===null?null : (validator.escape(email)).toLowerCase();
+	console.log("escaped email to be checked: " + escapedInputEmail );
+	
+   var escapedLink = link===null?null:validator.escape(link);
+   var examinedLink = _commonsLinkHelpers.isLink(escapedLink);
+   
+   if(escapedLink === null || (examinedLink.email !== escapedInputEmail)) {
+		console.log(console,request,"INVALID REQUEST : email / link mismatch : email: " + escapedInputEmail + "\nLink:" + escapedLink);
+		return reply({"error" : true , "message" : 'Input is not a valid email. '}).code(422); // Attempt should be reported in logs with IP source!
+	}
+   
+    if(!validator.isEmail(escapedInputEmail)) {
+		console.log(console,request,"INVALID EMAIL : escaped email : " + escapedInputEmail);
+		return reply({"error" : true , "message" : 'Input is not a valid email. '}).code(422); // Attempt should be reported in logs with IP source!
+	}
+	else {
+        console.log("email oK")
+        if(!_commonsPasswordHelpers.passwordIsValid(password)) {
+            console.log("password does not match requirred complexity");
+            return reply({"error" : true , "message" : "password does not match required complexity"}).code(422);
+        }
+  
+       
+        MY_PLAYERS.resetPassword(escapedInputEmail, password, escapedLink)
+        .then((wasPlayerFoundAndPasswordReset) =>
+             {
+               if(wasPlayerFoundAndPasswordReset === false) {
+                  return reply({"error" : true , "message" : "password could not be reset for player: " + escapedInputEmail }).code(422);
+               }
+               else {
+                  return reply({ "message" : 'Password reset succeeded! Now, close and log in!', email: escapedInputEmail}).code(200);
+               }
+             }
+        )
+        .catch ((ex) => {
+            console.error('Player\'s password could not be reset!!?' + ex);
+            return reply({"error" : true, "message" : 'We temporarily could not reset your password. \
+                         Please try again in a few minutes.'}).code(500);
+        })
+	}
+  } catch (ex)  {
+	  console.error("ouch! ", ex.message, ex);
+	  return reply({
+				error: true,
+				errMessage: 'server-side error'
+	  });
+	}}
+});
 console.log("Routes for auth plugin loaded");
 }};
 

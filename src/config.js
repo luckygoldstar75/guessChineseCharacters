@@ -24,7 +24,8 @@ const _myConfig = {
                               return s ? "-" + p.substr(0,4) + "-" + p.substr(4,4) : p ;
                           }
                           return _p8() + _p8(true) + _p8(true) + _p8();
-                        } 
+                        },
+"frontURL" : 'http://melocal:3000' //should not be hard coded : the whole file should be env dependant / deploy time
 };
 
 export default _myConfig ;

@@ -6,54 +6,13 @@ import _log from './loggingTools';
 import inert from 'inert';
 import MY_PLAYERS from './CRUD-my_players.js';
 import crypto from "crypto";
-
-const minimumPasswordSize = 8;
-const HOME_SITE_WEB_BASE_URL = "http://japprendslechinoisenjouant.com";
-
-function isLink(_link) {
-    var _escapedLink;
-    
-    _escapedLink = validator.escape(_link);
-    var _myIsBase64 = validator.isBase64(_link);
-        
-    if (_link !== null && _link !== undefined && (_escapedLink=validator.escape(_link)) === _link
-        && validator.isBase64(_link)) {
-        var _decodedLinkReceived = Buffer.from(_escapedLink, 'base64').toString('binary');
-        var decodedLinkSplitArray = _decodedLinkReceived.split(";");
-        
-        if (decodedLinkSplitArray && decodedLinkSplitArray.length === 2) {
-            var _myEmail = decodedLinkSplitArray[1];
-            var _myLink = decodedLinkSplitArray[0];
-            if(validator.isEmail(_myEmail)) {
-                return {'email' : _myEmail, 'link' : _myLink}    
-            }
-        }
-        
-    }    
-    
-    return null;
-}
-
-function getFullRequestPath(request) {
-    const url = (request.headers['x-forwarded-proto'] || request.connection.info.protocol) 
-    + '://' 
-    + request.info.host 
-    + request.url.path;
-    
-    return url;
-}
-
-function passwordIsValid(pwd) {
-    if(pwd !== null && pwd !== undefined &&  pwd.length >= minimumPasswordSize
-       &&  pwd.match(/^(?=.*[a-z])^(?=.*[A-Z])^(?=.*\d)^(?=.*[^A-Za-z0-9])/)) {        
-        return true;
-    }
-    return false;
-}
+import _commonsPasswordHelpers from './commons-passwordHelpers.js';
+import _commonsServerHelpers from './commons-serverHelpers.js';
+import _commonsLinkHelpers from './commons-linkHelpers.js';    
 
 export const routes_signup = [
 {
-	path: '/signup', 
+	path: '/signup',
 	method: 'POST',
     config : {
 		    auth : false,
@@ -67,11 +26,11 @@ export const routes_signup = [
 	
     if(!validator.isEmail(escapedInputEmail)) {
 		console.log(console,request,"INVALID EMAIL : escaped email : " + escapedInputEmail);
-		return reply('Input is not a valid email. Attempt has been reported!').code(422);
+		return reply('Input is not a valid email. ').code(422); // Attempt should be reported in logs with IP source!
 	}
 	else {
         console.log("email oK")
-        if(!passwordIsValid(password)) {
+        if(!_commonsPasswordHelpers.passwordIsValid(password)) {
             console.log("password mismatch");
             return reply("password does not match required complexity").code(422);
         }
@@ -81,7 +40,7 @@ export const routes_signup = [
         try {
               console.log("isExistingEmail after call to amazon db", _isExistingEmail);
               if (_isExistingEmail) {
-                    return reply({'message' : 'Email already exists. Attempt has been reported!'}).code(422);
+                    return reply({'message' : 'Email already exists. '}).code(422); // Attempt should be reported in logs with IP source!
               };
         }
         catch(ex) {
@@ -97,21 +56,24 @@ export const routes_signup = [
         var escapedInputPseudo = " ";
 
         console.log("before link");
-        var link=  Buffer.from(crypto.createHash('sha512').update(crypto.randomBytes(512)).digest('hex').toString()+";"+escapedInputEmail, 'binary')
-            .toString('base64');
-        var linkExpiracyTimestamp = new Date().setTime(new Date().getTime() + 2*60*60*1000);
+        var signupLink=  Buffer.from(crypto.createHash('sha512').update(crypto.randomBytes(512)).digest('hex').toString()+";"
+                                     +escapedInputEmail, 'binary').toString('base64');
+        var signupLinkExpiracyTimestamp = (new Date().setTime(new Date().getTime() + 6*60*60*1000)).toString();
 
         var isTemporaryAccountNeedingSignupValidation =true;
+   
         try {
-            MY_PLAYERS.create(escapedInputEmail, password, escapedInputAvatar, escapedInputPseudo, link, linkExpiracyTimestamp,
+            MY_PLAYERS.create(escapedInputEmail, password, escapedInputAvatar, escapedInputPseudo, signupLink, signupLinkExpiracyTimestamp,
                           isTemporaryAccountNeedingSignupValidation);
         }
         catch (ex) {
-            return reply({"error" : "true", "message" : 'Player could not be created!!?' + ex}).code(500); 
+            console.error('Player could not be created!!?' + ex);
+            return reply({"error" : "true", "message" : 'We temporarily could not create your account. \
+                         Please try again in a few minutes.'}).code(500);
         }
         
         // CALL AMAZON for  sending email including unique link UNDER WORK!!
-        var fullLink=getFullRequestPath(request) + '/' + link;
+        var fullLink=_commonsServerHelpers.getFullRequestPath(request) + '/' + signupLink;
         MY_PLAYERS.sendEmailForSignupConfirmation(console, '"J\'apprends le chinois en jouant" <noreply@japprendslechinoisenjouant.fr>',
                                                                       escapedInputEmail, fullLink)
         .then(resolve => {return reply({"error" : "false", "message" : 'Welcome! You shall receive in a few seconds a personal validation email with a link to folllow \
@@ -148,20 +110,21 @@ export const routes_signup = [
     
     console.log("signup confirmation request received for link: " + _escapedLink );	 //todo : request.IPsource pour logguer
   	
-    var myObjectLink= isLink(_escapedLink);
+    var myObjectLink= _commonsLinkHelpers.isLink(_escapedLink);
     if(!myObjectLink) {
 		console.error("INVALID confirmation signup link: " + _escapedLink);
 		return reply('Input is not a valid confirmation link. Attempt has been reported!');
 	}
     
-    await MY_PLAYERS.validateLink(_escapedLink, myObjectLink.email)
+    await MY_PLAYERS.validateSignupLink(_escapedLink, myObjectLink.email)
         .then(resolve => {
               return reply('<!doctype html><html lang="fr">\
                            <head><meta charset="utf-8">\
                             <title>Welcome! Your subscription is confirmed!</title>\
-                            <meta http-equiv="refresh" content="3;URL='+ HOME_SITE_WEB_BASE_URL +'">\
+                            <meta http-equiv="refresh" content="3;URL='+ _myConfig.frontURL +'/login">\
                            </head>\
-                            <body>Congratulations, your subscription is confirmed !</body></html>'
+                            <body><h1>Hey there!</h1> \
+                                  Congratulations, your subscription is confirmed ! Wait a second, we take you to login ... </body></html>'
                         ).code(200)
             }
         )
@@ -207,13 +170,13 @@ export const routes_signup = [
             .toString('base64');
 
         console.log("New signup reemission link " + link);
-        var linkExpiracyTimestamp = new Date().setTime(new Date().getTime() + 2*60*60*1000);
+        var linkExpiracyTimestamp = parseInt(new Date().setTime(new Date().getTime() + 2*60*60*1000), 10);
  
         MY_PLAYERS.renewSignupConfirmationLink(escapedInputEmail, link, linkExpiracyTimestamp)
         .then( resolve =>  {console.log('Signup reemission link for player performed successfully');
                // CALL AMAZON for  sending email including unique link 
               MY_PLAYERS.sendEmailForSignupConfirmation(console, '"J\'apprends le chinois en jouant" <noreply@japprendslechinoisenjouant.fr>',
-                                                                      escapedInputEmail, getFullRequestPath(request) + '/' + link);
+                           escapedInputEmail, _commonsServerHelpers.getHostFromRequest(request) + '/signup/' + link);
               })
         .then(resolve => {return reply({"error" : "false", "message" : 'Welcome! You shall receive in a few seconds a personal validation email with a link to folllow \
                            for definitive confirmation of your account creation!'}).code(200)})
