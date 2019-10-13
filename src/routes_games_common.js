@@ -8,6 +8,8 @@ import GAMES from './games.js';
 import SESSIONS from './CRUD-sessions.js';
 import PLAYER_RESULTS from './CRUD-playerResults.js';
 
+const NB_SUGGESTIONS = 5;
+
 export const routes_games_common = [
 {
 	path: '/guess/{gameName}/{level?}',
@@ -44,14 +46,15 @@ export const routes_games_common = [
 					console.log("gameName computed from url: ", _gameName);
 				 }
 				 
-				 var question = GAMES.getNextQuestion(_gameName, _level);
+				 var question = GAMES.getNextQuestion(_gameName, _level, NB_SUGGESTIONS);
 
 				 var myUniqueGuessId=_myConfig.guid();
 				 console.log("myUniqueGuessId: ", myUniqueGuessId);
 				 // TODO : see if needed to obfuscate characters so as to not get them stolen : myCar.pinyin="forYouToGuess";
 				 var returnGuessItem = { "id": myUniqueGuessId ,
 					"type" : question.question.type, "value" : question.question.value,
-						"game" : question.game, "level" : question.level,
+					suggestedAnswers : question.question.suggestedAnswers,
+						"game" : question.game, "level" : question.level, 
 										  "timestamp" : Date.now()};
 				 console.log("returnGuessItem" + returnGuessItem);
 				 var stringGuessItem = JSON.stringify(returnGuessItem);
@@ -102,7 +105,7 @@ export const routes_games_common = [
 				delete _myConfig.server.tableOfCurrentGuess[_id]; // the guess is now to be erased : it has been tested for guess once
 		
 				if (guessItem.expectedAnswer.type === answer.type &&
-					guessItem.expectedAnswer.value.toLowerCase() === validator.escape(answer.value).toLowerCase()
+					validator.escape(guessItem.expectedAnswer.value).toLowerCase() === validator.escape(answer.value).toLowerCase()
 				) {
 				   isGood = true;
 				 }
