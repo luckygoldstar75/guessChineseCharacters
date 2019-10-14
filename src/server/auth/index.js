@@ -12,6 +12,8 @@ import MY_PLAYERS from '../../CRUD-my_players.js';
 import _commonsServerHelpers from '../../commons-serverHelpers.js';
 import _commonsLinkHelpers from '../../commons-linkHelpers.js';  
 import _commonsPasswordHelpers from '../../commons-passwordHelpers.js';  
+require('dotenv').config();
+
 
 exports.register = function(server, options, next) {
     
@@ -27,7 +29,7 @@ exports.register = function(server, options, next) {
 
         // Set our server authentication strategy
         server.auth.strategy('standard', 'cookie', {
-            password: 'somecrazycookiesecretthatcantbeguesseswouldgohere', // cookie secret
+            password: process.env.authCookieSecretKey, // cookie secret
             cookie: 'authsid', // Cookie name
             isSameSite : 'Lax',
             isSecure: false, // required for non-https applications

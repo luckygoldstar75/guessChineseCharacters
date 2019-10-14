@@ -1,6 +1,5 @@
 "use strict";
 
-import _myConfig from './config';
 import validator from 'validator';
 import _log from './loggingTools';
 import inert from 'inert';
