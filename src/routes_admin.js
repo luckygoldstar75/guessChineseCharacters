@@ -9,6 +9,9 @@ export const routes_admin = [
 {
 path: '/hello',
 method: 'GET',
+config : {
+      auth: false,
+},
 handler: ( request, reply ) => {
 	reply('hello world'); //.type('text/plain');
 }
