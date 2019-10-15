@@ -7,7 +7,7 @@ import inert from 'inert';
 
 export const routes_admin = [
 {
-path: '/hello',
+path: '/services/hello',
 method: 'GET',
 config : {
       auth: false,
