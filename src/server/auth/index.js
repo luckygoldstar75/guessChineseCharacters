@@ -69,7 +69,7 @@ function loadAuthRoutes()
    server.route(
    {
         method: 'GET',
-        path: '/logout',
+        path: '/services/logout',
         config: {
             auth: {
                     strategy: 'standard'                    
@@ -97,7 +97,7 @@ function loadAuthRoutes()
 	
     server.route(
       {
-           path: '/login',
+           path: '/services/login',
            method: ['GET', 'POST'],
            config : {
 		    auth : false /*,
@@ -263,7 +263,7 @@ function loadAuthRoutes()
    server.route(
    {
         method: 'POST',
-        path: '/forgotPassword',
+        path: '/services/forgotPassword',
         config: {
             auth: false
         },
@@ -290,7 +290,7 @@ function loadAuthRoutes()
         .then( resolve =>  {console.log('New Forgot password link for player stored successfully');
                // CALL AMAZON for  sending email including unique link 
               MY_PLAYERS.sendEmailForForgotPassword(console, '"J\'apprends le chinois en jouant" <noreply@japprendslechinoisenjouant.fr>',
-                                                                      escapedInputEmail, _commonsServerHelpers.getHostFromRequest(request) + '/forgotPassword/' + link);
+                     escapedInputEmail, _commonsServerHelpers.getHostFromRequest(request) + '/services/forgotPassword/' + link);
               })
         .then(resolve => {return reply({"message" : 'Welcome! You shall receive in a few seconds a personal validation email with a link to folllow \
                            for changing your forgotten password!'}).code(200)})
@@ -311,7 +311,7 @@ function loadAuthRoutes()
 
 server.route(
 {
-	path: '/forgotPassword/{link}', 
+	path: '/services/forgotPassword/{link}', 
 	method: 'GET',
     config : {
       auth: false,
@@ -373,7 +373,7 @@ server.route(
 
 server.route(
 {
-	path: '/resetPassword',
+	path: '/services/resetPassword',
 	method: 'POST',
     config : {
 		    auth : false,

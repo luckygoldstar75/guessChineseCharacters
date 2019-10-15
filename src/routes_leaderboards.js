@@ -7,7 +7,7 @@ import inert from 'inert';
 
 export const routes_leaderboards = [
 {
-path: '/rank',
+path: '/services/rank',
 method: 'GET',
 config: {
 	auth: {

@@ -12,7 +12,7 @@ const NB_SUGGESTIONS = 5;
 
 export const routes_games_common = [
 {
-	path: '/guess/{gameName}/{level?}',
+	path: '/services/guess/{gameName}/{level?}',
 	method: 'GET',
 	config : {
       auth: false,
@@ -69,7 +69,7 @@ export const routes_games_common = [
 }
 },
 {
-	path: '/guess/{id}', 
+	path: '/services/guess/{id}', 
 	method: 'POST',
 	config: {
 		auth: {
@@ -178,7 +178,7 @@ export const routes_games_common = [
 }
 },
 {
-path: '/scores/{gameName}',
+path: '/services/scores/{gameName}',
 method: 'GET',
 config: {
 	auth: {
@@ -263,7 +263,7 @@ handler: ( request, reply ) => {
 }}
 ,
 {
-path: '/playerResults/{gameName}/{level?}',
+path: '/services/playerResults/{gameName}/{level?}',
 method: 'GET',
 config: {
 	auth: {

@@ -12,7 +12,7 @@ import _commonsLinkHelpers from './commons-linkHelpers.js';
 
 export const routes_signup = [
 {
-	path: '/signup',
+	path: '/services/signup',
 	method: 'POST',
     config : {
 		    auth : false,
@@ -92,7 +92,7 @@ export const routes_signup = [
 	}}
 },
 {
-	path: '/signup/{link}', 
+	path: '/services/signup/{link}', 
 	method: 'GET',
     config : {
       auth: false,
@@ -148,7 +148,7 @@ export const routes_signup = [
 }
 ,
 {
-	path: '/signupReemissionRequest', 
+	path: '/services/signupReemissionRequest', 
 	method: 'POST',
     config : {
 		    auth : false,
@@ -176,7 +176,7 @@ export const routes_signup = [
         .then( resolve =>  {console.log('Signup reemission link for player performed successfully');
                // CALL AMAZON for  sending email including unique link 
               MY_PLAYERS.sendEmailForSignupConfirmation(console, '"J\'apprends le chinois en jouant" <noreply@japprendslechinoisenjouant.fr>',
-                           escapedInputEmail, _commonsServerHelpers.getHostFromRequest(request) + '/signup/' + link);
+                           escapedInputEmail, _commonsServerHelpers.getHostFromRequest(request) + '/services/signup/' + link);
               })
         .then(resolve => {return reply({"error" : "false", "message" : 'Welcome! You shall receive in a few seconds a personal validation email with a link to folllow \
                            for definitive confirmation of your account creation!'}).code(200)})
@@ -194,7 +194,7 @@ export const routes_signup = [
 	}}
 },
 {
-	path: '/validEmail', //TODO: not in production
+	path: '/services/validEmail', //TODO: not in production
 	method: 'POST',
 	handler: ( request, reply ) => { try {
 		const { email } = request.payload;

@@ -17,7 +17,7 @@ handler: ( request, reply ) => {
 }
 },
 {
-path: '/stats', // NOT FUNCTIONAL : SERVER SIDE ERRORS : REDEFINE PURPOSE!!!!
+path: '/services/stats', // NOT FUNCTIONAL : SERVER SIDE ERRORS : REDEFINE PURPOSE!!!!
 method: 'GET',
 handler: ( request, reply ) => { try {
 			  var docClient = new AWS.DynamoDB.DocumentClient();
@@ -48,7 +48,7 @@ handler: ( request, reply ) => { try {
 }
 },
 { // TO BE REMOVE IN PRODUCTION MODE
-path: '/dumRetrieveLastSession',
+path: '/services/dumRetrieveLastSession',
 method: 'GET',
 handler: async ( request, reply ) => {
 	function getResult(err, myLastSession) {
@@ -65,7 +65,7 @@ handler: async ( request, reply ) => {
 }
 },
 {
-	path: '/privacyCheckTestService', //TODO NOT BE PUT IN PRODUCTION
+	path: '/services/privacyCheckTestService', //TODO NOT BE PUT IN PRODUCTION
 	method: 'GET',
 	/*config: {
 		auth: {
@@ -86,7 +86,7 @@ handler: async ( request, reply ) => {
 
 },
 {
-path: '/listSessions',
+path: '/services/listSessions',
 method: 'GET',
 handler: ( request, reply ) => {
 	function callback(err, _reply) {
