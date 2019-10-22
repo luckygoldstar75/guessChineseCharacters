@@ -9,7 +9,7 @@ getNextQuestion : function(_gameName, _level, _nbSuggestions) {
 		case 'readCharacterWritePinyin':
 			nextCharacter = CHINESE_CHARACTERS_JSON.getNextRandomCharacter(_level);
 			return ({"game": _gameName, "level" : _level ,
-					question : { "type" : "string", "value" : nextCharacter.caracter},
+					question : { "type" : "string", "value" : nextCharacter.traditional},
 					expectedAnswer :  { "type" : "string", "value" : nextCharacter.pinyin},
 					});
 		case 'readCharacterSelectFrench':
@@ -23,7 +23,7 @@ getNextQuestion : function(_gameName, _level, _nbSuggestions) {
 			
 			
 			return ({"game": _gameName, "level" : _level ,
-					question : { "type" : "string", "value" : nextCharacter.caracter, suggestedAnswers : _randomSuggestedAnswers},
+					question : { "type" : "string", "value" : nextCharacter.traditional, suggestedAnswers : _randomSuggestedAnswers},
 					expectedAnswer :  { "type" : "string", "value" : nextCharacter.translation}
 					});
 		default:
