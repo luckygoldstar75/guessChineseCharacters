@@ -7,6 +7,7 @@ import inert from 'inert';
 import GAMES from './games.js';
 import SESSIONS from './CRUD-sessions.js';
 import PLAYER_RESULTS from './CRUD-playerResults.js';
+import _commonsGameHelpers from './commons-gameHelpers.js';
 
 const NB_SUGGESTIONS = 5;
 
@@ -35,7 +36,7 @@ export const routes_games_common = [
 				 console.log("Request Params: ", request.params);
 				 console.log("Request Params: level", request.params.level);
 				 
-				 if (request.params  && request.params.level && typeof request.params.level ==="number" )  {
+				 if (request.params  && request.params.level && typeof request.params.level ==="string" )  {
 					console.log("raw level from URL: ", request.params.level);
 					_level=encodeURIComponent(request.params.level);
 					console.log("level computed from url: ", _level);
@@ -46,7 +47,7 @@ export const routes_games_common = [
 					console.log("gameName computed from url: ", _gameName);
 				 }
 				 
-				 var question = GAMES.getNextQuestion(_gameName, _level, NB_SUGGESTIONS);
+				 var question = GAMES.getNextQuestion(_gameName, Object.keys(_commonsGameHelpers.levels).indexOf(_level), NB_SUGGESTIONS);
 
 				 var myUniqueGuessId=_myConfig.guid();
 				 console.log("myUniqueGuessId: ", myUniqueGuessId);
@@ -276,7 +277,7 @@ config: {
       }     */       
 },
 handler: ( request, reply ) => {			
-		var  __sid, __game, __level;
+		let  __sid, __game, __level;
 		var response ={};
 			__game = request.params.gameName;
 			__level=request.params.level;
@@ -296,7 +297,6 @@ handler: ( request, reply ) => {
 		}
 		
 		try {
-			 var __sid=request.state['authsid'].sid;
 			 request.server.app.cacheSession.get(__sid, (err, value, cached, log) => {
 				  if(err || value == null || value.email == null) {
 					  console.error("could not get session sid in cache: " + err );
@@ -305,9 +305,35 @@ handler: ( request, reply ) => {
 				  else {										  
 					  var __email = value.email;
 					  if (__email != null) {
-						  console.log("just before PLAYERRESULTS.retrieve with email: " +__email);		
+						  console.debug("just before PLAYERRESULTS.retrieve with email: " +__email);		
 						  try {
-							PLAYER_RESULTS.retrieveUserResultsForGameAndLevel(__email, __game, __level, getPlayerResults);
+							if (__level ===undefined || __level === null) {
+								let receiveLastLevelForGameAndChainFortheResults=((err, levelObject) => {
+									console.debug("just before PLAYERRESULTS.retrieveUserResultsForGameAndLevel with email: " +__email);		
+									var _retrievedLevel = (levelObject === undefined || levelObject === null
+										|| levelObject.level === undefined || levelObject.level === null
+										|| Object.keys(_commonsGameHelpers.levels).indexOf(levelObject.level) === -1)
+										?Object.keys(_commonsGameHelpers.levels)[0]:levelObject.level;
+									try {
+											PLAYER_RESULTS.retrieveUserResultsForGameAndLevel(__email, __game, _retrievedLevel, getPlayerResults);
+									}
+									catch (ex)  {
+										console.error("getting player results error : ", ex.message);
+										return reply({
+										level: ERROR,
+										message: 'server-side error'
+									}).code(500);
+									}
+								});
+								
+								PLAYER_RESULTS.retrieveLastLevelForGameAndUser(__email, __game,
+																			   receiveLastLevelForGameAndChainFortheResults); //updates __level								
+							
+								
+							}
+							else {
+								PLAYER_RESULTS.retrieveUserResultsForGameAndLevel(__email, __game, __level, getPlayerResults);
+							}
 						  }
 						  catch (ex)  {
 							console.error("getting player results error : ", ex.message);
@@ -328,7 +354,9 @@ handler: ( request, reply ) => {
 				  failClean();
 		}
 		
-		function getPlayerResults(err, playerResultsObject) {
+		
+		
+		var getPlayerResults=((err, playerResultsObject) => {
 			if (playerResultsObject == null) {
 				return reply().code(204); // no content
 			}
@@ -339,6 +367,6 @@ handler: ( request, reply ) => {
 			else {			 		
 			 return reply(playerResultsObject).code(200);
 			}
-		}	
+		});	
 }}
 ];

@@ -2,48 +2,90 @@
 import _myConfig from './config';
 import AWS from 'aws-sdk';
 import _log from './loggingTools';
-
-const _levels= {"novice" : 200,
-"confirmé" : 400,
-"avancé" : 400,
-"maître" : 400};
+import _commonsGameHelpers from './commons-gameHelpers.js';
 
 const PLAYER_RESULTS =
 {
-    levels : _levels,
+    levels : _commonsGameHelpers.levels,
   __tableName : "results_byPlayerAndTimestamp",
   
-  retrieveUserResultsForGameAndLevel : function ( __email, __gameName, __level, callback ) {
-                      var ddb = new AWS.DynamoDB();
-                      
-                      console.debug("retrieveUserResultsForGameAndLevel : email: " + __email + " game: " + __gameName + " level: " + __level);
+  
+  retrieveLastLevelForGameAndUser : function ( __email, __gameName, callback ) {
+    var ddb = new AWS.DynamoDB();
+    console.debug("retrieveLastLevelForGameAndUser : email: " + __email + " game: " + __gameName );
 
-                      if( __email==undefined) {
-                         callback("PLAYER_RESULTS NOT FOUND : email undefined", null);
-                         return;
-                      }
+    if( __email==undefined) {
+      callback("PLAYER_RESULTS NOT FOUND : email undefined", null);
+      return;
+    }
 
-                      var params = {
-                          TableName: this.__tableName,
-                          "ExpressionAttributeNames": {"#level" : "gameLevel"},
-                          "ExpressionAttributeValues": {":email" : {"S" : __email} , ":gameName" : {"S" : __gameName},
-                          ":level" : {"S" : __level}},
-						  "KeyConditionExpression": "email = :email ",
-                          "FilterExpression" : "#level = :level AND gameName = :gameName",
-						  "Limit": this.levels[__level],
-						  ScanIndexForward: false
-                          };
+    var params = {
+      TableName: this.__tableName,
+      "ExpressionAttributeValues": {":email" : {"S" : __email} , ":gameName" : {"S" : __gameName}},
+			"KeyConditionExpression": "email = :email ",
+      "FilterExpression" : "gameName = :gameName",
+			ScanIndexForward: false
+    };
                     
-                    var _reply= undefined;    
-                    ddb.query(params, async function(err, data) {
-                    if (err) { 
-						console.error(err + ' Unable to read last session item ' + err.stack);
+    var _reply= undefined;    
+    ddb.query(params, async function(err, data) {
+    if (err) { 
+						console.error(err + ' Unable to read last result item ' + err.stack);
 						callback(err, null);
-					} 
-					else if (data === undefined || data.Items === undefined || 
+		}
+		else if (data === undefined || data.Items === undefined || 
 						data.Items.length<1 ) {
 						console.log('no existing results items found');
-						callback(null, {})
+						callback(null, null);
+		}
+		else {
+         console.debug("data " + JSON.stringify(data));
+         _reply = {'level' : data.Items[0].gameLevel.S};
+          console.log("_reply " + JSON.stringify(_reply));
+          callback(null, _reply);                        
+    }
+    });
+  },
+  
+  retrieveUserResultsForGameAndLevel : function ( __email, __gameName, __level, callback ) {
+    var ddb = new AWS.DynamoDB();
+    
+    console.debug("retrieveUserResultsForGameAndLevel : email: " + __email + " game: " + __gameName
+                  + " level: " + __level);
+
+    if( __email==undefined) {
+       callback("PLAYER_RESULTS NOT FOUND : email undefined", null);
+       return;
+    }
+
+    var params = {
+            TableName: this.__tableName,
+            "ExpressionAttributeNames": {"#level" : "gameLevel"},
+            "ExpressionAttributeValues": {":email" : {"S" : __email} , ":gameName" : {"S" : __gameName},
+            ":level" : {"S" : __level}},
+            "KeyConditionExpression": "email = :email ",
+            "FilterExpression" : "#level = :level AND gameName = :gameName",
+            ScanIndexForward: false
+            };
+      
+    var _reply= undefined;    
+    ddb.query(params, async function(err, data) {
+                    if (err) { 
+						console.error(err + ' Unable to read last result item ' + err.stack);
+						callback(err, null);
+					}
+					else if (data === undefined || data.Items === undefined || data.Items.length<1 ) {
+              console.log('no existing results items found');
+              _reply = {'nbGood': 0,
+                      'nbFalse': 0,
+                      'nbTries': 0,
+                      'percentageGood': 0,
+                      'percentageTries' : 0,
+                      'minimumNbTriesForLevel' : PLAYER_RESULTS.levels[__level],
+                      'level' : __level,
+              };
+              console.log("_reply " + JSON.stringify(_reply));
+              callback(null, _reply);     
 					}
 					else {
                         
@@ -71,14 +113,15 @@ const PLAYER_RESULTS =
                     // Let's assume here we have items fetched
                         //var nbPoints=data.Items[0].nbPoints.N;
                         //var rank=data.Items[0].rank.N;
-                    var nbTries = data.Count;
-                    var nbGood = data.Items.reduce(function (n, item) {
+                    var windowItems = data.Items.slice(0, Math.min(PLAYER_RESULTS.levels[__level], data.Items.length -1));
+                    var nbTries = windowItems.length;
+                    var nbGood = windowItems.reduce(function (n, item) {
                                     return n + (item.isGood.BOOL === true);
                     }, 0);                    
                     var percentageGood = Math.round(nbGood / nbTries * 100);
                     var percentageTries = Math.round(nbTries / PLAYER_RESULTS.levels[__level] *100);
                     
-                     console.debug("data " + JSON.stringify(data));
+                     console.debug("data Items in the window of last tries" + JSON.stringify(windowItems));
                      _reply = {'nbGood': nbGood,
                                'nbFalse': nbTries - nbGood,
                                'nbTries': nbTries,
@@ -89,8 +132,8 @@ const PLAYER_RESULTS =
                      };
                      console.log("_reply " + JSON.stringify(_reply));
                      callback(null, _reply);                        
-                      }
-                    });
+              }
+      });
   },
   add : function(__email, __sessionId,  __gameName, __gameLevel, __questionType, __questionValue, __answerType, __answerValue,
                  __isGood, __timestamp, callback ) {    
@@ -101,7 +144,7 @@ const PLAYER_RESULTS =
               "Item" : {"email" : {"S" : __email},
                 "sessionId" : {"S" : __sessionId},
                 "gameName" : {"S" : __gameName},
-                "gameLevel" : {"S" : __gameLevel||Object.keys(_levels)[0]},
+                "gameLevel" : {"S" : __gameLevel||Object.keys(_commonsGameHelpers.levels)[0]},
                 "questionType" : {"S" : __questionType},
                 "questionValue" : {"S" : __questionValue},
                 "answerType" : {"S" : __answerType},

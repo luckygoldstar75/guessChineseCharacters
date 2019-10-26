@@ -26,6 +26,21 @@ getNextQuestion : function(_gameName, _level, _nbSuggestions) {
 					question : { "type" : "string", "value" : nextCharacter.traditional, suggestedAnswers : _randomSuggestedAnswers},
 					expectedAnswer :  { "type" : "string", "value" : nextCharacter.translation}
 					});
+		
+		case 'listenThenSelectCharacter' :
+			nextCharacter = CHINESE_CHARACTERS_JSON.getNextRandomCharacter(_level);
+			var randomCharacters = CHINESE_CHARACTERS_JSON.getRandomSuggestedAnswersCharacter(nextCharacter,
+																									_level, _nbSuggestions);
+			var _randomSuggestedAnswers = randomCharacters.map(x => x.audio);
+			var _randomIndex=Math.floor((Math.random()*100000)) % _randomSuggestedAnswers.length;
+			
+			_randomSuggestedAnswers.splice( _randomIndex, 0 ,nextCharacter.translation);			
+			
+			return ({"game": _gameName, "level" : _level ,
+					question : { "type" : "audio", "value" : nextCharacter.traditionnal, suggestedAnswers : _randomSuggestedAnswers},
+					expectedAnswer :  { "type" : "audio", "value" : nextCharacter.audio}
+					});
+		
 		default:
 			throw 'unknown game';
 	}
