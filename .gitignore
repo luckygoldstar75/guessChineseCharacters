@@ -1,2 +1,9 @@
 node_modules
 .env*
+.babelrc.bak
+jalcej.server.pass.key
+jlcej.server.csr
+jlcej.server.key
+jlcej.server.pass.key
+package-lock.json
+
