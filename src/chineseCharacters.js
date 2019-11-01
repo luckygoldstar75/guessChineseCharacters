@@ -4,7 +4,7 @@
 const CHINESE_CHARACTERS_JSON = []; //Array of levels of array of words json objects
 
 //TARGET (pinyin key for audio file for reading loud)  {	 "pinyin":"ān" , "traditionnal": "安", "simplified": "安, "translation" : "paix", "hint" : "femme sous toît"},
-CHINESE_CHARACTERS_JSON[1]=[
+CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "ān",
         "simplified": "安",
@@ -246,7 +246,7 @@ CHINESE_CHARACTERS_JSON[1]=[
         "audio": "xia3o"
     }
 ];
-CHINESE_CHARACTERS_JSON[2]=[
+CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "shì",
         "simplified": "是",
@@ -1744,7 +1744,7 @@ function getNextRandomCharacter(level) {
 	
 	// level is OK in good boundaries
 	var _levelIndex = pickLevelIndexRandom(level);
-	return CHINESE_CHARACTERS_JSON[_levelIndex][Math.floor((Math.random() *100000)) % CHINESE_CHARACTERS_JSON[_levelIndex]];
+	return CHINESE_CHARACTERS_JSON[_levelIndex][Math.floor((Math.random() *100000)) % CHINESE_CHARACTERS_JSON[_levelIndex].length];
 }
 
 

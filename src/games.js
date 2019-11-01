@@ -1,5 +1,5 @@
 'use strict';
-import CHINESE_CHARACTERS_JSON from './chineseCaracters.js';
+import CHINESE_CHARACTERS_JSON from './chineseCharacters.js';
 
 const GAMES = 
 {
@@ -37,7 +37,7 @@ getNextQuestion : function(_gameName, _level, _nbSuggestions) {
 			_randomSuggestedAnswers.splice( _randomIndex, 0 ,nextCharacter.translation);			
 			
 			return ({"game": _gameName, "level" : _level ,
-					question : { "type" : "audio", "value" : nextCharacter.traditionnal, suggestedAnswers : _randomSuggestedAnswers},
+					question : { "type" : "audio", "value" : nextCharacter.traditional, suggestedAnswers : _randomSuggestedAnswers},
 					expectedAnswer :  { "type" : "audio", "value" : nextCharacter.audio}
 					});
 		
