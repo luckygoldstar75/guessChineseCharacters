@@ -1,5 +1,5 @@
 'use strict';
-
+import _commonsGameHelpers from './commons-gameHelpers.js';
 
 const CHINESE_CHARACTERS_JSON = []; //Array of levels of array of words json objects
 
@@ -1716,7 +1716,7 @@ function pickLevelIndexRandom(levelIndex) {
 	else {
 		delta = 3;
 	}
-	
+	// TODO : correct here to go plunge in formal levels such as defined by delta unused further in this code at present time
 	
 	if (levelIndex > 1 && levelIndex < MAX_LEVEL_GUESSCHARACTER_GAME) {
 			var delta = -1;
@@ -1724,15 +1724,17 @@ function pickLevelIndexRandom(levelIndex) {
 			return levelIndex + delta;	
 	}
 	else if (levelIndex < MAX_LEVEL_GUESSCHARACTER_GAME) {
-			return levelIndex +1;
+			return levelIndex;
 	}
 	else if (levelIndex > 1) { return (levelIndex -1); }
 	else return 1 ; //Default value
 
 }
 
-function getNextRandomCharacter(level) {
-	if (level == null || level < 0 || level > MAX_LEVEL_GUESSCHARACTER_GAME) {
+function getNextRandomCharacter(_level) {
+    var levelIndex = Object.keys(_commonsGameHelpers.levels).indexOf(_level);
+        
+	if (levelIndex == null || levelIndex < 0 || levelIndex > MAX_LEVEL_GUESSCHARACTER_GAME) {
 		var randomIndex=Math.floor((Math.random()*100000)) % TOTAL_NB_ELEMENTS;
 		console.debug("Method " , getNextRandomCharacter.name, " NB TOTAL ELEMENTS: " ,TOTAL_NB_ELEMENTS);
 		var currentIndex =0;
@@ -1743,12 +1745,14 @@ function getNextRandomCharacter(level) {
 	}
 	
 	// level is OK in good boundaries
-	var _levelIndex = pickLevelIndexRandom(level);
+	var _levelIndex = pickLevelIndexRandom(levelIndex);
 	return CHINESE_CHARACTERS_JSON[_levelIndex][Math.floor((Math.random() *100000)) % CHINESE_CHARACTERS_JSON[_levelIndex].length];
 }
 
 
  function getRandomSuggestedAnswersCharacter(nextCharacter, _level, _nbSuggestions) {
+    var levelIndex = Object.keys(_commonsGameHelpers.levels).indexOf(_level);
+    
 	var suggestions = [];
 	
 	if (_nbSuggestions == null || !parseInt(_nbSuggestions) || _nbSuggestions < 2 || _nbSuggestions > 10) {
@@ -1758,7 +1762,7 @@ function getNextRandomCharacter(level) {
 	else {
 		var c ;
 		for(var i=0; i<_nbSuggestions; i++) {
-			c=getNextRandomCharacter(_level);
+			c=getNextRandomCharacter(levelIndex);
 			suggestions.push(c);
 		}
 	}

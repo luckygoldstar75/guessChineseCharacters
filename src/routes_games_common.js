@@ -39,6 +39,9 @@ export const routes_games_common = [
 				 if (request.params  && request.params.level && typeof request.params.level ==="string" )  {
 					console.log("raw level from URL: ", request.params.level);
 					_level=encodeURIComponent(request.params.level);
+					if (Object.keys(_commonsGameHelpers.levels).indexOf(_level) === -1) {
+						throw new Exception("wrong level: " + _level);
+					}
 					console.log("level computed from url: ", _level);
 				 }
 				 if (request.params  && request.params.gameName && typeof request.params.gameName ==="string" )  {
@@ -47,7 +50,7 @@ export const routes_games_common = [
 					console.log("gameName computed from url: ", _gameName);
 				 }
 				 
-				 var question = GAMES.getNextQuestion(_gameName, Object.keys(_commonsGameHelpers.levels).indexOf(_level), NB_SUGGESTIONS);
+				 var question = GAMES.getNextQuestion(_gameName, _level, NB_SUGGESTIONS);
 
 				 var myUniqueGuessId=_myConfig.guid();
 				 console.log("myUniqueGuessId: ", myUniqueGuessId);

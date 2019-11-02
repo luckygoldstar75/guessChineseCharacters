@@ -1,8 +1,8 @@
 const _commonsGameHelpers = {
     levels : {"novice" : 200,
-        "confirmé" : 400,
-        "avancé" : 400,
-        "maître" : 400
+        "confirmed" : 400,
+        "advanced" : 400,
+        "master" : 400
     }
 };
 
