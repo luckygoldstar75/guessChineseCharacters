@@ -68,7 +68,9 @@ export const routes_games_common = [
 				return reply(stringGuessItem).code(200);
 		} catch (ex)  {
 	console.error("Exception catchée: ", ex.message, ex.stack);
-			reply( 'server-side error' ).code(500);
+			reply( {
+				level: ERROR,
+				message: 'server-side error'} ).code(500);
 		}
 }
 },
@@ -177,7 +179,9 @@ export const routes_games_common = [
 				}
 		} catch (ex)  {
 			console.error("", ex.message,ex.stack);
-			reply( 'server-side error' ).code(500);
+			reply( {
+				level: ERROR,
+				message: 'server-side error'} ).code(500);
 		}
 }
 },

@@ -34,11 +34,11 @@ getNextQuestion : function(_gameName, _level, _nbSuggestions) {
 			var _randomSuggestedAnswers = randomCharacters.map(x => x.audio);
 			var _randomIndex=Math.floor((Math.random()*100000)) % _randomSuggestedAnswers.length;
 			
-			_randomSuggestedAnswers.splice( _randomIndex, 0 ,nextCharacter.translation);			
+			_randomSuggestedAnswers.splice( _randomIndex, 0 ,nextCharacter.audio);			
 			
 			return ({"game": _gameName, "level" : _level ,
 					question : { "type" : "audio", "value" : nextCharacter.traditional, suggestedAnswers : _randomSuggestedAnswers},
-					expectedAnswer :  { "type" : "audio", "value" : nextCharacter.audio}
+					expectedAnswer :  { "type" : "string", "value" : nextCharacter.audio}
 					});
 		
 		default:
