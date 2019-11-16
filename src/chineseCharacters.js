@@ -1024,12 +1024,12 @@ CHINESE_CHARACTERS_JSON[1]=[
         "audio": "mi2ngtia1n"
     },
     {
-        "pinyin": "míngzì",
+        "pinyin": "míngzi",
         "simplified": "名字",
         "traditional": "名字",
         "translation": "prénom (personne), nom (objet)",
         "hint": "",
-        "audio": "mi2ngzi4"
+        "audio": "mi2ngzi"
     },
     {
         "pinyin": "nǎr",

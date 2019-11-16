@@ -27,7 +27,7 @@ getNextQuestion : function(_gameName, _level, _nbSuggestions) {
 					expectedAnswer :  { "type" : "string", "value" : nextCharacter.translation}
 					});
 		
-		case 'listenThenSelectCharacter' :
+		case 'readCharacterChoosePronunciation' :
 			nextCharacter = CHINESE_CHARACTERS_JSON.getNextRandomCharacter(_level);
 			var randomCharacters = CHINESE_CHARACTERS_JSON.getRandomSuggestedAnswersCharacter(nextCharacter,
 																									_level, _nbSuggestions);
