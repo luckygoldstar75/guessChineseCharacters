@@ -8,7 +8,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "ān",
         "simplified": "安",
-        "traditional": " 安",
+        "traditional": "安",
         "translation": "paix",
         "hint": "femme sous toît",
         "audio": "a1n"
@@ -16,7 +16,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "bàba",
         "simplified": "爸爸",
-        "traditional": " 爸爸",
+        "traditional": "爸爸",
         "translation": "papa",
         "hint": "",
         "audio": "ba4ba"
@@ -24,7 +24,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "māma",
         "simplified": "媽媽",
-        "traditional": " 媽媽",
+        "traditional": "媽媽",
         "translation": "mère,maman",
         "hint": "genre féminin + puis le ma phonétique",
         "audio": "ma1ma"
@@ -40,7 +40,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "gēge",
         "simplified": "哥哥",
-        "traditional": " 哥哥",
+        "traditional": "哥哥",
         "translation": "frère aîné",
         "hint": "",
         "audio": "ge1ge"
@@ -64,7 +64,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "mèimei",
         "simplified": "妹妹",
-        "traditional": " 妹妹",
+        "traditional": "妹妹",
         "translation": "petite sœur",
         "hint": "",
         "audio": "me4imei"
@@ -72,7 +72,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "zài",
         "simplified": "在",
-        "traditional": " 在",
+        "traditional": "在",
         "translation": "à,exister,en,dans",
         "hint": "",
         "audio": "za4i"
@@ -80,7 +80,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "zhèlǐ",
         "simplified": "這里",
-        "traditional": " 這里",
+        "traditional": "這里",
         "translation": "ici",
         "hint": "en désignant : ceci à l'intérieur (du village)",
         "audio": "zhe4li3"
@@ -88,7 +88,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "nǎlǐ",
         "simplified": "哪里",
-        "traditional": " 哪里",
+        "traditional": "哪里",
         "translation": "là-bas",
         "hint": "où à l'intérieur du village",
         "audio": "na3li3"
@@ -96,7 +96,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "Wǒ jiā zài zhèlǐ",
         "simplified": "我 家 在 這里",
-        "traditional": " 我 家 在 這里",
+        "traditional": "我 家 在 這里",
         "translation": "Ma maison est ici.",
         "hint": "Je maison/foyer exister ici",
         "audio": "Wo3_jia1_za4i_zhe4li3"
@@ -104,7 +104,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "nǎlǐ",
         "simplified": "哪里",
-        "traditional": " 哪里",
+        "traditional": "哪里",
         "translation": "là-bas",
         "hint": "où à l'interieur du vilage",
         "audio": "na3li3"
@@ -120,7 +120,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "zài",
         "simplified": "在",
-        "traditional": " 在",
+        "traditional": "在",
         "translation": "de nouveau",
         "hint": "",
         "audio": "za4i"
@@ -128,7 +128,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "jiàn",
         "simplified": "見",
-        "traditional": " 見",
+        "traditional": "見",
         "translation": "voir",
         "hint": "clé de l'oeil actif!",
         "audio": "jia4n"
@@ -144,7 +144,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "míngtiān jiàn",
         "simplified": "明天見",
-        "traditional": " 明天見",
+        "traditional": "明天見",
         "translation": "A demain",
         "hint": "se voir jour brillant",
         "audio": "mi2ngtia1n_jia4n"
@@ -152,7 +152,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "míngtiān",
         "simplified": "明天",
-        "traditional": " 明天",
+        "traditional": "明天",
         "translation": "demain",
         "hint": "brillant/le ciel au dessus de l'homme, le jour.",
         "audio": "mi2ngtia1n"
@@ -160,7 +160,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "zǎo",
         "simplified": "早",
-        "traditional": " 早",
+        "traditional": "早",
         "translation": "matin",
         "hint": "soleil|petit déjeuner",
         "audio": "za3o"
@@ -168,7 +168,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "zǎoān",
         "simplified": "早安",
-        "traditional": " 早安",
+        "traditional": "早安",
         "translation": "bonjour (tôt le matin)",
         "hint": "matin|paix",
         "audio": "za3oa1n"
@@ -176,7 +176,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "hǎo",
         "simplified": "好",
-        "traditional": " 好",
+        "traditional": "好",
         "translation": "bon",
         "hint": "femme+enfant=bon",
         "audio": "ha3o"
@@ -184,7 +184,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "nǐ",
         "simplified": "你",
-        "traditional": " 你",
+        "traditional": "你",
         "translation": "tu,toi",
         "hint": "",
         "audio": "ni3"
@@ -192,7 +192,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "nǐhǎo",
         "simplified": "你好",
-        "traditional": " 你好",
+        "traditional": "你好",
         "translation": "toi, bonjour",
         "hint": "",
         "audio": "ni3ha3o"
@@ -208,7 +208,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "tā",
         "simplified": "她",
-        "traditional": " 她",
+        "traditional": "她",
         "translation": "elle",
         "hint": "",
         "audio": "ta1"
@@ -216,7 +216,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "bù",
         "simplified": "不",
-        "traditional": " 不",
+        "traditional": "不",
         "translation": "ne pas",
         "hint": "",
         "audio": "bu4"
@@ -224,7 +224,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "wǒ",
         "simplified": "我",
-        "traditional": " 我",
+        "traditional": "我",
         "translation": "je,moi",
         "hint": "",
         "audio": "wo3"
@@ -232,7 +232,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "xièxie",
         "simplified": "谢谢",
-        "traditional": " 谢谢",
+        "traditional": "谢谢",
         "translation": "merci",
         "hint": "",
         "audio": "xie4xie"
@@ -240,7 +240,7 @@ CHINESE_CHARACTERS_JSON[0]=[
     {
         "pinyin": "xiǎo",
         "simplified": "小",
-        "traditional": " 小",
+        "traditional": "小",
         "translation": "petit",
         "hint": "",
         "audio": "xia3o"
@@ -250,7 +250,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "shì",
         "simplified": "是",
-        "traditional": " 是",
+        "traditional": "是",
         "translation": "être",
         "hint": "sous le soleil , exactement.",
         "audio": "shi4"
@@ -258,7 +258,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "bù kèqì",
         "simplified": "不客氣",
-        "traditional": " 不客氣",
+        "traditional": "不客氣",
         "translation": "pas de quoi",
         "hint": "(ne) pas , politesse",
         "audio": "bu4_ke4qi4"
@@ -266,7 +266,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "jiào",
         "simplified": "叫",
-        "traditional": " 叫",
+        "traditional": "叫",
         "translation": "s'appeler",
         "hint": "la clé bouche!",
         "audio": "jia4o"
@@ -274,7 +274,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "shénme",
         "simplified": "什麽",
-        "traditional": " 什麽",
+        "traditional": "什麽",
         "translation": "quel",
         "hint": "",
         "audio": "she2nme"
@@ -282,7 +282,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "míngzì",
         "simplified": "名字",
-        "traditional": " 名字",
+        "traditional": "名字",
         "translation": "nom",
         "hint": "la clé bouche, réputation!",
         "audio": "mi2ngzi4"
@@ -290,23 +290,31 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "nǐ jiào shénme míngzì?",
         "simplified": "你 叫 什麽 名字?",
-        "traditional": " 你 叫 什麽 名字?",
+        "traditional": "你 叫 什麽 名字?",
         "translation": "Comment t'appelles-tu?",
         "hint": "toi s'appeler quel nom?",
         "audio": "ni3_jia4o_she2nme_mi2ngzi4"
     },
     {
+        "pinyin": "Xiǎomíng",
+        "simplified": "小明",
+        "traditional": "小明",
+        "translation": "Xiăomíng",
+        "hint": "",
+        "audio": "xia3omi2ng"
+    },
+    {
         "pinyin": "wǒ jiào Xiǎomíng",
         "simplified": "我 叫 小明",
-        "traditional": " 我 叫 小明",
+        "traditional": "我 叫 小明",
         "translation": "Je m'appelle Xiăomíng",
         "hint": "",
         "audio": "wo3_jia4o_Xia3omi2ng"
     },
     {
         "pinyin": "tā jiào Dànián",
-        "simplified": " 他 叫 大年",
-        "traditional": "  他 叫 大年",
+        "simplified": "他 叫 大年",
+        "traditional": "他 叫 大年",
         "translation": "Il s'appelle Dànián",
         "hint": "",
         "audio": "ta1_jia4o_Da4nia2n"
@@ -314,7 +322,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "míng",
         "simplified": "明 ",
-        "traditional": " 明 ",
+        "traditional": "明 ",
         "translation": "clair, lumineux",
         "hint": "soleil|lune",
         "audio": "mi2ng"
@@ -322,7 +330,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "Xiǎomíng",
         "simplified": "小明",
-        "traditional": " 小明",
+        "traditional": "小明",
         "translation": "Xiǎomíng (prénom)",
         "hint": "petit lumineux",
         "audio": "Xia3omi2ng"
@@ -338,7 +346,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "xiāng",
         "simplified": "香",
-        "traditional": " 香",
+        "traditional": "香",
         "translation": "parfumé",
         "hint": "la bonne odeur du grain 禾 (hé) qui dore au soleil 日 (rì)",
         "audio": "xia1ng"
@@ -346,7 +354,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "dà",
         "simplified": "大",
-        "traditional": " 大",
+        "traditional": "大",
         "translation": "grand,très",
         "hint": "Un homme 人 écartant grand les bras.",
         "audio": "da4"
@@ -354,7 +362,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "nián",
         "simplified": "年",
-        "traditional": " 年",
+        "traditional": "年",
         "translation": "an, année",
         "hint": "",
         "audio": "nia2n"
@@ -362,7 +370,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "Dànián",
         "simplified": "大年",
-        "traditional": " 大年",
+        "traditional": "大年",
         "translation": "Dànián (prénom)",
         "hint": "",
         "audio": "Da4nia2n"
@@ -370,7 +378,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "jiā",
         "simplified": "佳",
-        "traditional": " 佳",
+        "traditional": "佳",
         "translation": "beau, joli",
         "hint": "",
         "audio": "jia1"
@@ -378,7 +386,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "Jiājiā",
         "simplified": "佳佳",
-        "traditional": " 佳佳",
+        "traditional": "佳佳",
         "translation": "prénom Jiājiā",
         "hint": "",
         "audio": "Jia1jia1"
@@ -386,7 +394,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "péngyǒu",
         "simplified": "朋友",
-        "traditional": " 朋友",
+        "traditional": "朋友",
         "translation": "ami",
         "hint": "",
         "audio": "pe2ngyo3u"
@@ -394,7 +402,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "péng",
         "simplified": "朋",
-        "traditional": " 朋",
+        "traditional": "朋",
         "translation": "ami",
         "hint": "",
         "audio": "pe2ng"
@@ -402,7 +410,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "yǒu",
         "simplified": "友",
-        "traditional": " 友",
+        "traditional": "友",
         "translation": "ami",
         "hint": "",
         "audio": "yo3u"
@@ -410,7 +418,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "shéi",
         "simplified": "谁|誰",
-        "traditional": " 谁|誰",
+        "traditional": "谁|誰",
         "translation": "Qui?",
         "hint": "radical parole = demander qui? 2e partie = phonétique",
         "audio": "she2i"
@@ -418,7 +426,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "tā shì shéi?",
         "simplified": "他 是 誰?",
-        "traditional": " 他 是 誰?",
+        "traditional": "他 是 誰?",
         "translation": "Qui est-il?",
         "hint": "Lui être qui?",
         "audio": "ta1_shi4_she2i"
@@ -426,7 +434,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "tā shì wǒ māma",
         "simplified": "她 是 我 媽媽",
-        "traditional": " 她 是 我 媽媽",
+        "traditional": "她 是 我 媽媽",
         "translation": "Elle est ma Maman",
         "hint": "",
         "audio": "ta1_shi4_wo3_ma1ma"
@@ -434,7 +442,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "kè",
         "simplified": "课|課",
-        "traditional": " 课|課",
+        "traditional": "课|課",
         "translation": "leçon ",
         "hint": "dire cours (clé parole)",
         "audio": "ke4"
@@ -442,7 +450,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "de",
         "simplified": "的",
-        "traditional": " 的",
+        "traditional": "的",
         "translation": "de (appartenance)",
         "hint": "",
         "audio": "de"
@@ -450,7 +458,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "lǎoshī",
         "simplified": "老師",
-        "traditional": " 老師",
+        "traditional": "老師",
         "translation": "professeur",
         "hint": "personne avec une canne",
         "audio": "la3oshi1"
@@ -458,7 +466,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "háishì",
         "simplified": "還是",
-        "traditional": " 還是",
+        "traditional": "還是",
         "translation": "ou bien encore être",
         "hint": "",
         "audio": "ha2ishi4"
@@ -466,7 +474,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "hái",
         "simplified": "還",
-        "traditional": " 還",
+        "traditional": "還",
         "translation": "ou bien encore, en plus",
         "hint": "",
         "audio": "ha2i"
@@ -474,7 +482,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "lǎoshī, wǒ zài zhèlǐ",
         "simplified": "老師, 我 再 這里",
-        "traditional": " 老師, 我 再 這里",
+        "traditional": "老師, 我 再 這里",
         "translation": "Professeur, je suis ici!",
         "hint": "",
         "audio": "la3oshi1,_wo3_za4i_zhe4li3"
@@ -482,7 +490,7 @@ CHINESE_CHARACTERS_JSON[1]=[
     {
         "pinyin": "nǐ shì Xiǎomíng ma ?",
         "simplified": "你 是 小明 嗎?",
-        "traditional": " 你 是 小明 嗎?",
+        "traditional": "你 是 小明 嗎?",
         "translation": "Tu es Xiǎomíng n'est-ce pas?",
         "hint": "",
         "audio": "ni3_shi4_Xia3omi2ng_ma_"
@@ -765,7 +773,7 @@ CHINESE_CHARACTERS_JSON[1]=[
         "traditional": "汉语",
         "translation": "chinois (langue chinoise)",
         "hint": "",
-        "audio": "Ha4nyu3"
+        "audio": "ha4nyu3"
     },
     {
         "pinyin": "hāo",

@@ -69,7 +69,7 @@ export const routes_games_common = [
 		} catch (ex)  {
 	console.error("Exception catchée: ", ex.message, ex.stack);
 			reply( {
-				level: ERROR,
+				level: 'ERROR',
 				message: 'server-side error'} ).code(500);
 		}
 }

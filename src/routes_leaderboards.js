@@ -3,6 +3,7 @@
 import validator from 'validator';
 import _log from './loggingTools';
 import inert from 'inert';
+import LEADERBOARDS from './CRUD-leaderboards.js';
 
 
 export const routes_leaderboards = [
@@ -31,7 +32,7 @@ handler: ( request, reply ) => {
 		
 		function failClean() {
 				return reply({
-				level: ERROR,
+				level: 'ERROR',
 				message: 'technical error : rank could not be retrieved'
 			}).code(500);					
 		}
@@ -57,7 +58,7 @@ handler: ( request, reply ) => {
 						  catch (ex)  {
 							console.error("getting rank error : ", ex.message);
 							return reply({
-								level: ERROR,
+								level: 'ERROR',
 								message: 'server-side error'
 							}).code(500);
 						  }

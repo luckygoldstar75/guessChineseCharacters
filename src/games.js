@@ -41,6 +41,23 @@ getNextQuestion : function(_gameName, _level, _nbSuggestions) {
 					expectedAnswer :  { "type" : "string", "value" : nextCharacter.audio}
 					});
 		
+		case 'hearPronunciationSelectCharacter' :
+			nextCharacter = CHINESE_CHARACTERS_JSON.getNextRandomCharacter(_level);
+			var randomCharacters = CHINESE_CHARACTERS_JSON.getRandomSuggestedAnswersCharacter(nextCharacter,
+																									_level, _nbSuggestions);
+			var _randomSuggestedAnswers = randomCharacters.map(x => {
+				var _mysuggestion = {'character' : x.traditional, 'audio' : x.audio};
+				return _mysuggestion;});
+			var _randomIndex=Math.floor((Math.random()*100000)) % _randomSuggestedAnswers.length;
+			
+			_randomSuggestedAnswers.splice( _randomIndex, 0 ,
+										   {'character' : nextCharacter.traditional, 'audio' : nextCharacter.audio});			
+			
+			return ({"game": _gameName, "level" : _level ,
+					question : {"type" : "audio", "value" : nextCharacter.audio, suggestedAnswers : _randomSuggestedAnswers},
+					expectedAnswer :  { "type" : "string", "value" : nextCharacter.audio}
+					});
+		
 		default:
 			throw 'unknown game';
 	}
